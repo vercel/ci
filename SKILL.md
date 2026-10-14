@@ -35,7 +35,7 @@ Show the team, project when supplied, confirmed repository, local checkout, defa
 
 Inspect root and package-level Turbo configurations, workspace package scripts, GitHub Actions workflows, and Turbo dry-run output.
 
-List the runnable tasks and recommend a small initial set. Prefer:
+List the runnable tasks and recommend a small initial set of Turbo tasks to run in Vercel CI. Prefer:
 
 - `lint`;
 - `typecheck`, `type-check`, or `tsc`;

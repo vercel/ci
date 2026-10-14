@@ -48,7 +48,7 @@ Task names are only signals. Confirm scripts, dependencies, and environment requ
 
 ## Prefer low-dependency tasks
 
-Recommend a small initial set that is likely to run without customer-specific setup.
+Recommend a small initial set of Turbo tasks to run in Vercel CI that is likely to work without customer-specific setup.
 
 Strong candidates:
 
