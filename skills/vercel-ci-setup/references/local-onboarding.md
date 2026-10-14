@@ -1,6 +1,17 @@
 # Local Vercel CI Onboarding
 
-Use this reference while following the goals and workflow in the root `SKILL.md`.
+Use this reference while following the goals and workflow in the parent `SKILL.md`.
+
+## Check CLI capabilities
+
+Require the installed Vercel CLI to support both commands:
+
+```bash
+vercel api --help
+vercel ci list --help
+```
+
+If either command is unavailable, stop and ask the user to upgrade Vercel CLI. Do not silently substitute operation-ID dispatch or an unreleased command.
 
 ## Resolve the repository
 
@@ -28,21 +39,22 @@ Record `ciEnabled`, `ciEnabledAt`, and the canonical repository identity. Stop i
 
 ## Discover runnable tasks
 
-Perform this analysis without modifying files:
+Keep discovery read-only:
 
-1. Require a root `turbo.json` or `turbo.jsonc` and a resolvable `turbo` dependency. Stop and report that this skill supports only Turborepo repositories if either is absent.
+1. Require a root `turbo.json` or `turbo.jsonc` and a declared `turbo` dependency. Stop and report that this skill supports only Turborepo repositories if either is absent.
 2. Detect the package manager from the root `package.json` and lockfile.
 3. Read the root `package.json`, workspace definition, root Turbo configuration, package manifests, and package-level Turbo configurations.
 4. Collect each task declared under `tasks` that has a matching non-empty script in the root or at least one applicable workspace package.
 5. Preserve the task's Turbo config path and full task name. A task name alone is not unique across package-level configurations.
 6. Inspect `.github/workflows/**/*.yml` and `.github/workflows/**/*.yaml` for Turbo tasks already exercised in CI.
-7. Use the repository's package manager to run a Turbo dry run for candidates. Do not execute the tasks during discovery.
+
+Do not install dependencies or invoke Turbo during discovery. If dependencies are absent, invoking Turbo can use a different global version or create repository guidance files, violating read-only analysis. Perform runtime validation only after approval when the repository's declared version is installed.
 
 Use task names as initial recommendation signals:
 
 - lint tasks;
-- type-checking tasks such as `typecheck`, `type-check`, or `tsc`;
-- unit-test tasks such as `unit-test` or `unittest`;
+- type-checking tasks such as `typecheck`, `type-check`, `check-types`, or `tsc`;
+- unit-test tasks such as `unit-test`, `unittest`, or `test:unit`;
 - other focused test tasks.
 
 Task names are only signals. Confirm scripts, dependencies, and environment requirements before recommending them.
@@ -66,7 +78,7 @@ Do not recommend these by default:
 - tasks requiring databases, browsers, cloud credentials, or external services;
 - tasks whose environment requirements cannot be determined.
 
-Inspect the applicable Turbo configuration and dry-run output for:
+Inspect applicable Turbo definitions for:
 
 - `env`;
 - `passThroughEnv`;
@@ -76,14 +88,15 @@ Inspect the applicable Turbo configuration and dry-run output for:
 
 Also inspect package scripts and existing workflows for environment setup. Do not claim that a task needs no environment variables merely because Turbo declares none. Describe the available evidence and call uncertainty out explicitly.
 
-Present all runnable tasks separately from the recommended subset. For each recommendation, include:
+Group available tasks by config path and task name. Present the recommended subset with:
 
-- config path;
-- task name;
-- reason for recommending it;
+- task name and config path;
+- recommendation reason;
 - whether GitHub Actions already runs it;
 - relevant dependencies;
 - declared or observed environment requirements.
+
+Offer the complete available-task list on request instead of printing every package-level instance.
 
 Ask once: “Proceed with these tasks and create the onboarding pull request?” Explain that approval covers the exact task selection, any Turborepo upgrade, repository enablement, file changes, push, and pull-request creation. After approval, complete the workflow without asking again.
 
@@ -91,13 +104,15 @@ Ask once: “Proceed with these tasks and create the onboarding pull request?”
 
 Require a clean working tree. Fetch the remote default branch and create a new branch from its latest commit. Never discard unrelated local work.
 
-Determine the installed Turborepo version from the repository's dependency declaration and package-manager resolution. If it is older than 2.11.7:
+Determine the Turborepo version from the repository's dependency declaration and lockfile. If it is older than 2.11.7:
 
 1. Show the current and proposed versions before obtaining approval.
 2. Preserve the repository's dependency style and version policy.
 3. Update the root Turborepo dependency to a compatible release at or above 2.11.7.
 4. Run the detected package manager's install command to regenerate its lockfile.
 5. Never hand-edit the lockfile.
+
+If dependencies are absent and no upgrade is needed, install the lockfile's existing dependency versions after approval so validation uses the repository's declared Turbo version.
 
 For each approved task, add `ci` to its `tags` array in the applicable Turbo configuration:
 
@@ -113,10 +128,11 @@ For each approved task, add `ci` to its `tags` array in the applicable Turbo con
 
 Preserve existing tags, formatting, and JSONC comments. Do not add a task that is absent from that configuration.
 
-Run a Turbo dry run for the selected tasks after editing. Confirm that:
+Validate that:
 
-- Turborepo is at least 2.11.7;
-- every selected task resolves;
+- the resolved Turborepo version is at least 2.11.7;
+- each edited Turbo configuration parses;
+- every selected task still has a matching non-empty package script;
 - every selected task has the `ci` tag;
 - no unapproved task was changed.
 
