@@ -37,14 +37,14 @@ Perform this analysis without modifying files:
 5. Inspect `.github/workflows/**/*.yml` and `.github/workflows/**/*.yaml` for Turbo tasks already exercised in CI.
 6. Use the repository's package manager to run a Turbo dry run for candidates. Do not execute the tasks during discovery.
 
-Mirror these name-based recommendation signals from Vercel CI's server-side analyzer:
+Use task names as initial recommendation signals:
 
-- names ending in `lint`;
-- names ending in `typecheck`, `type-check`, or `tsc`;
-- names ending in `unit-test` or `unittest`;
-- names ending in `test`.
+- lint tasks;
+- type-checking tasks such as `typecheck`, `type-check`, or `tsc`;
+- unit-test tasks such as `unit-test` or `unittest`;
+- other focused test tasks.
 
-A matching name is evidence, not automatic approval.
+Task names are only signals. Confirm scripts, dependencies, and environment requirements before recommending them.
 
 ## Prefer low-dependency tasks
 
