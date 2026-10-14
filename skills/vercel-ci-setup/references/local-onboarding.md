@@ -61,7 +61,7 @@ Task names are only signals. Confirm scripts, dependencies, and environment requ
 
 ## Prefer low-dependency tasks
 
-Recommend a small initial set of Turbo tasks to run in Vercel CI that is likely to work without customer-specific setup.
+Prefer focused lint, type-check, and unit-test tasks that require no secrets, environment variables, deployments, or external services.
 
 Strong candidates:
 
@@ -98,7 +98,7 @@ Group available tasks by config path and task name. Present the recommended subs
 
 Offer the complete available-task list on request instead of printing every package-level instance.
 
-Ask once: “Proceed with these tasks and create the onboarding pull request?” Explain that approval covers the exact task selection, any Turborepo upgrade, repository enablement, file changes, push, and pull-request creation. After approval, complete the workflow without asking again.
+Present the recommended tasks, exclusions, Turbo upgrade, and files to change. Ask once: “Proceed with these tasks and create the onboarding PR?” Explain that approval covers repository enablement, file changes, push, and pull-request creation. After approval, complete the workflow without asking again.
 
 ## Prepare the combined change
 
@@ -208,4 +208,4 @@ When an invocation appears, report its status and construct its dashboard URL:
 https://vercel.com/<team-slug>/~/ci/<invocation-id>
 ```
 
-Do not wait indefinitely. If no invocation appears, report that it is still pending and return the exact lookup command with the pull-request URL.
+Return the pull-request URL and, once available, the Vercel CI invocation URL. Do not wait indefinitely. If no invocation appears, report that it is still pending and return the exact lookup command with the pull-request URL.

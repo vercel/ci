@@ -5,12 +5,7 @@ description: Set up Vercel CI from a local checkout of a linked private GitHub T
 
 # Vercel CI Setup
 
-Onboard one locally available Turborepo and finish with:
-
-- a user-approved set of Turbo tasks selected from local repository evidence;
-- one pull request that upgrades Turborepo when necessary and adds `ci` tags;
-- Vercel CI enabled immediately before pull-request creation;
-- links to the pull request and its Vercel CI invocation.
+Onboard a private GitHub repository to Vercel CI by recommending a small initial set of Turbo tasks and opening one configuration pull request.
 
 Read [references/local-onboarding.md](references/local-onboarding.md) before starting. It contains the task-selection rules, commands, and recovery behavior.
 
@@ -36,28 +31,15 @@ Show the team, project when supplied, confirmed repository, local checkout, defa
 
 Inspect root and package-level Turbo configurations, workspace package scripts, and GitHub Actions workflows without changing files or running Turbo.
 
-Group the available tasks by config path and task name. Recommend a small initial set of Turbo tasks to run in Vercel CI. Prefer:
-
-- `lint`;
-- `typecheck`, `type-check`, `check-types`, or `tsc`;
-- `unit-test`, `unittest`, or `test:unit`;
-- other focused `test` tasks.
-
-Prefer tasks already run in GitHub Actions and tasks with no declared environment variables, deployment dependencies, or external-service setup. Do not recommend `build`, end-to-end, integration, deployment, or smoke tasks by default.
+Group the available tasks by config path and task name. Prefer focused lint, type-check, and unit-test tasks that require no secrets, environment variables, deployments, or external services.
 
 For every recommendation, show its config path, task name, concise supporting evidence, dependencies, and environment requirements. Offer the complete available-task list on request instead of printing every package-level instance.
 
 ### 3. Obtain approval
 
-Before changing files or remote state, present:
+Present the recommended tasks, exclusions, Turbo upgrade, and files to change. Ask once: “Proceed with these tasks and create the onboarding PR?”
 
-- the exact tasks to tag;
-- the current Turborepo version;
-- the proposed Turborepo upgrade when it is older than 2.11.7;
-- the files expected to change;
-- the branch and pull-request plan.
-
-Ask once: “Proceed with these tasks and create the onboarding pull request?” Make clear that approval covers the exact task selection, any dependency upgrade, repository enablement, file changes, push, and pull-request creation. After approval, complete the workflow without additional confirmation prompts.
+Make clear that approval covers repository enablement, file changes, push, and pull-request creation. After approval, complete the workflow without additional confirmation prompts.
 
 ### 4. Prepare one local pull request
 
@@ -77,15 +59,6 @@ Do not merge the pull request unless the user explicitly asks.
 
 ### 6. Report the result
 
-After creating the pull request, look up the Vercel CI invocation for the pull-request branch and commit with `vercel ci list`. Use a bounded wait because invocation creation is asynchronous.
+Return the pull-request URL and, once available, the Vercel CI invocation URL.
 
-Return:
-
-- the pull-request URL;
-- the invocation URL and current status;
-- the repository and team;
-- the selected tasks;
-- whether Turborepo was upgraded;
-- the final `ciEnabled` state.
-
-If no invocation appears within the bounded wait, return the pull-request URL and the exact `vercel ci list` command the user can run later.
+Look up the invocation for the pull-request branch and commit with `vercel ci list`. Use a bounded wait because invocation creation is asynchronous. If no invocation appears, return the exact lookup command the user can run later.
