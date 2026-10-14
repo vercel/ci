@@ -84,7 +84,7 @@ Present all runnable tasks separately from the recommended subset. For each reco
 - relevant dependencies;
 - declared or observed environment requirements.
 
-Obtain approval for the exact selection before editing files.
+Ask once: “Proceed with these tasks and create the onboarding pull request?” Explain that approval covers the exact task selection, any Turborepo upgrade, repository enablement, file changes, push, and pull-request creation. After approval, complete the workflow without asking again.
 
 ## Prepare the combined change
 

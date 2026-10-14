@@ -56,7 +56,7 @@ Before changing files or remote state, present:
 - the files expected to change;
 - the branch and pull-request plan.
 
-Ask the user to approve the task selection, any dependency upgrade, repository enablement, and pull-request creation as one workflow.
+Ask once: “Proceed with these tasks and create the onboarding pull request?” Make clear that approval covers the exact task selection, any dependency upgrade, repository enablement, file changes, push, and pull-request creation. After approval, complete the workflow without additional confirmation prompts.
 
 ### 4. Prepare one local pull request
 
