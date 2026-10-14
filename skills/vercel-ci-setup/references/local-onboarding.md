@@ -63,12 +63,7 @@ Task names are only signals. Confirm scripts, dependencies, and environment requ
 
 Prefer focused lint, type-check, and unit-test tasks that require no secrets, environment variables, deployments, or external services.
 
-Strong candidates:
-
-- linting;
-- static type checking;
-- unit tests with no external services;
-- focused tests already running in GitHub Actions.
+Treat existing GitHub Actions use as positive evidence.
 
 Do not recommend these by default:
 
@@ -88,7 +83,7 @@ Inspect applicable Turbo definitions for:
 
 Also inspect package scripts and existing workflows for environment setup. Do not claim that a task needs no environment variables merely because Turbo declares none. Describe the available evidence and call uncertainty out explicitly.
 
-Group available tasks by config path and task name, counting the package instances covered by each group. Recommend at most five groups. Present each recommendation with:
+Summarize available tasks by config path and task name, counting the package instances covered by each task. Recommend at most five task selections. Present each recommendation with:
 
 - task name and config path;
 - package count;
