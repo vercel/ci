@@ -2,20 +2,28 @@
 
 Use this reference while following the goals and workflow in the parent `SKILL.md`.
 
+Read the current [Vercel CI documentation](https://vercel.com/docs/ci) first. Use it as the source of truth for current product requirements, supported task configuration, and CLI behavior. If it is unavailable, continue with this bundled guidance and note that current documentation could not be verified.
+
 ## Check CLI capabilities
 
-Require the installed Vercel CLI to support both commands:
+Use dedicated Vercel CLI commands when they support the required operation. Fall back to `vercel api` only for onboarding operations that the installed CLI does not expose.
 
 ```bash
 vercel api --help
 vercel ci list --help
 ```
 
-If either command is unavailable, stop and ask the user to upgrade Vercel CLI. Do not silently substitute operation-ID dispatch or an unreleased command.
+If either command is unavailable, stop and ask the user to upgrade Vercel CLI. Do not use operation-ID dispatch or unreleased commands.
 
 ## Resolve the repository
 
-If the user supplies a Vercel project, prefer its immutable project ID over its name:
+If the user supplies a Vercel project, prefer its immutable project ID over its name. Start with the dedicated project command:
+
+```bash
+vercel project inspect <project-id-or-name> --scope <team>
+```
+
+If the command does not return the canonical GitHub link, fall back to the raw project route:
 
 ```bash
 vercel api "/v9/projects/<url-encoded-project-id-or-name>" \
@@ -43,17 +51,18 @@ Keep discovery read-only:
 
 1. Require a root `turbo.json` or `turbo.jsonc` and a declared `turbo` dependency. Stop and report that this skill supports only Turborepo repositories if either is absent.
 2. Detect the package manager from the root `package.json` and lockfile.
-3. Read the root `package.json`, workspace definition, root Turbo configuration, package manifests, and package-level Turbo configurations.
+3. Read the root `package.json`, workspace definition, root Turborepo configuration, package manifests, and package-level Turborepo configurations.
 4. Collect each task declared under `tasks` that has a matching non-empty script in the root or at least one applicable workspace package.
-5. Preserve the task's Turbo config path and full task name. A task name alone is not unique across package-level configurations.
-6. Inspect `.github/workflows/**/*.yml` and `.github/workflows/**/*.yaml` for Turbo tasks already exercised in CI.
+5. Preserve the task's Turborepo config path and full task name. A task name alone is not unique across package-level configurations.
+6. Inspect `.github/workflows/**/*.yml` and `.github/workflows/**/*.yaml` for Turborepo tasks already exercised in CI.
 
-Do not install dependencies or invoke Turbo during discovery. If dependencies are absent, invoking Turbo can use a different global version or create repository guidance files, violating read-only analysis. Perform runtime validation only after approval when the repository's declared version is installed.
+Do not install dependencies or invoke `turbo` during discovery. If dependencies are absent, invoking `turbo` can use a different global version or create repository guidance files, violating read-only analysis. Perform runtime validation after selecting tasks, when the repository's declared version is installed.
 
 Use task names as initial recommendation signals:
 
 - lint tasks;
 - type-checking tasks such as `typecheck`, `type-check`, `check-types`, or `tsc`;
+- formatter-check tasks such as `format:check`, `format-check`, or `prettier:check`;
 - unit-test tasks such as `unit-test`, `unittest`, or `test:unit`;
 - other focused test tasks.
 
@@ -61,7 +70,7 @@ Task names are only signals. Confirm scripts, dependencies, and environment requ
 
 ## Prefer low-dependency tasks
 
-Prefer focused lint, type-check, and unit-test tasks that require no secrets, environment variables, deployments, or external services.
+Prefer focused lint, type-check, formatter-check, and unit-test tasks that require no secrets, environment variables, deployments, or external services.
 
 Treat existing GitHub Actions use as positive evidence.
 
@@ -73,7 +82,7 @@ Do not recommend these by default:
 - tasks requiring databases, browsers, cloud credentials, or external services;
 - tasks whose environment requirements cannot be determined.
 
-Inspect applicable Turbo definitions for:
+Inspect applicable Turborepo definitions for:
 
 - `env`;
 - `passThroughEnv`;
@@ -81,9 +90,9 @@ Inspect applicable Turbo definitions for:
 - `globalPassThroughEnv`;
 - dependencies on deployment or environment-provisioning tasks.
 
-Also inspect package scripts and existing workflows for environment setup. Do not claim that a task needs no environment variables merely because Turbo declares none. Describe the available evidence and call uncertainty out explicitly.
+Also inspect package scripts and existing workflows for environment setup. Do not claim that a task needs no environment variables merely because Turborepo declares none. Describe the available evidence and call uncertainty out explicitly.
 
-Summarize available tasks by config path and task name, counting the package instances covered by each task. Recommend at most five task selections. Present each recommendation with:
+Summarize available tasks by config path and task name, counting the package instances covered by each task. Select at most five conservative tasks. Record each selection with:
 
 - task name and config path;
 - package count;
@@ -92,99 +101,57 @@ Summarize available tasks by config path and task name, counting the package ins
 - relevant dependencies;
 - declared or observed environment requirements.
 
-Never print every package-level instance by default. If the user requests the complete list, ask for a task-name or config-path filter when useful and present the result in bounded pages.
+Never print every package-level instance by default.
 
-Present the recommended tasks, exclusions, Turbo upgrade, and files to change. Ask once: “Proceed with these tasks and create the onboarding PR?” Explain that approval covers repository enablement, file changes, push, and pull-request creation. After approval, complete the workflow without asking again.
+Proceed with the conservative selections and create the onboarding pull request. Ask only when the repository is ambiguous or no safe selection can be determined.
 
 ## Prepare the combined change
 
 Require a clean working tree. Fetch the remote default branch and create a new branch from its latest commit. Never discard unrelated local work.
 
-Determine the Turborepo version from the repository's dependency declaration and lockfile. If it is older than 2.11.7:
+Determine the Turborepo version from the repository's dependency declaration and lockfile. If it is older than the minimum in the current Vercel CI documentation:
 
-1. Show the current and proposed versions before obtaining approval.
+1. Record the current and proposed versions in the pull-request summary.
 2. Preserve the repository's dependency style and version policy.
-3. Update the root Turborepo dependency to a compatible release at or above 2.11.7.
+3. Update the root Turborepo dependency to a compatible release at or above the documented minimum, and never below 2.11.7.
 4. Run the detected package manager's install command to regenerate its lockfile.
 5. Never hand-edit the lockfile.
 
-If dependencies are absent and no upgrade is needed, install the lockfile's existing dependency versions after approval so validation uses the repository's declared Turbo version.
+If dependencies are absent and no upgrade is needed, install the lockfile's existing dependency versions so validation uses the repository's declared `turbo` version.
 
-For each approved task, add `ci` to its `tags` array in the applicable Turbo configuration:
-
-```json
-{
-  "tasks": {
-    "test": {
-      "tags": ["ci"]
-    }
-  }
-}
-```
-
-Preserve existing tags, formatting, and JSONC comments. Do not add a task that is absent from that configuration.
+Configure each selected task using the current task opt-in syntax from the Vercel CI documentation. Preserve existing task configuration, formatting, and JSONC comments. Do not add a task that is absent from that configuration.
 
 Validate that:
 
-- the resolved Turborepo version is at least 2.11.7;
-- each edited Turbo configuration parses;
+- the resolved Turborepo version satisfies the current documented minimum and is at least 2.11.7;
+- each edited Turborepo configuration parses;
 - every selected task still has a matching non-empty package script;
-- every selected task has the `ci` tag;
-- no unapproved task was changed.
+- every selected task uses the current documented Vercel CI opt-in syntax;
+- no unselected task was changed.
 
 Review the complete diff, commit it using the repository's commit style, and push the branch. Do not open the pull request yet.
 
 ## Enable Vercel CI
 
-Only after the branch is ready and pushed, enable Vercel CI immediately before pull-request creation:
-
-```bash
-enable_request=$(mktemp)
-chmod 600 "$enable_request"
-trap 'rm -f "$enable_request"' EXIT
-printf '%s\n' '{"ciEnabled":true}' > "$enable_request"
-vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<url-encoded-owner>&repository=<url-encoded-repository>" \
-  --scope <team> \
-  -X PATCH \
-  --input "$enable_request" \
-  --raw
-rm -f "$enable_request"
-trap - EXIT
-```
+Only after the branch is ready and pushed, enable Vercel CI immediately before pull-request creation. Prefer a dedicated Vercel CLI command when available; otherwise use the repository-settings API route.
 
 Read settings again and require `ciEnabled: true`. If enablement fails or cannot be verified, do not create the pull request.
 
 ## Create the pull request
 
-Create one pull request containing both the Turborepo upgrade, when required, and the approved task tags:
+Create one pull request containing both the Turborepo upgrade, when required, and the selected task configuration:
 
 ```bash
 gh pr create \
   --base <default-branch> \
   --head <setup-branch> \
   --title "Set up Vercel CI" \
-  --body "<summary of selected tasks, Turbo upgrade, and validation>"
+  --body "<summary of selected tasks, Turborepo upgrade, and validation>"
 ```
 
 If the command outcome is uncertain, look for an open pull request with the same head branch before retrying.
 
-If pull-request creation definitively fails and the repository was disabled before this workflow, restore the previous state:
-
-```bash
-disable_request=$(mktemp)
-chmod 600 "$disable_request"
-trap 'rm -f "$disable_request"' EXIT
-printf '%s\n' '{"ciEnabled":false}' > "$disable_request"
-vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<url-encoded-owner>&repository=<url-encoded-repository>" \
-  --scope <team> \
-  -X PATCH \
-  --input "$disable_request" \
-  --raw
-rm -f "$disable_request"
-trap - EXIT
-```
-
-Verify the rollback. Never disable a repository that was enabled before onboarding.
+If pull-request creation definitively fails and the repository was disabled before this workflow, restore and verify the previous state. Never disable a repository that was enabled before onboarding.
 
 ## Find the invocation
 
