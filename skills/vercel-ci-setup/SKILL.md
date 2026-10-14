@@ -31,9 +31,9 @@ Show the team, project when supplied, confirmed repository, local checkout, defa
 
 Inspect root and package-level Turbo configurations, workspace package scripts, and GitHub Actions workflows without changing files or running Turbo.
 
-Group the available tasks by config path and task name. Prefer focused lint, type-check, and unit-test tasks that require no secrets, environment variables, deployments, or external services.
+Group the available tasks by config path and task name, and show how many package instances each group covers. Recommend at most five focused lint, type-check, or unit-test groups that require no secrets, environment variables, deployments, or external services.
 
-For every recommendation, show its config path, task name, concise supporting evidence, dependencies, and environment requirements. Offer the complete available-task list on request instead of printing every package-level instance.
+For every recommendation, show its config path, task name, package count, concise supporting evidence, dependencies, and environment requirements. Never print every package-level instance by default; offer a filtered or paginated full list on request.
 
 ### 3. Obtain approval
 

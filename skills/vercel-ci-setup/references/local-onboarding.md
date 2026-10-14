@@ -88,15 +88,16 @@ Inspect applicable Turbo definitions for:
 
 Also inspect package scripts and existing workflows for environment setup. Do not claim that a task needs no environment variables merely because Turbo declares none. Describe the available evidence and call uncertainty out explicitly.
 
-Group available tasks by config path and task name. Present the recommended subset with:
+Group available tasks by config path and task name, counting the package instances covered by each group. Recommend at most five groups. Present each recommendation with:
 
 - task name and config path;
+- package count;
 - recommendation reason;
 - whether GitHub Actions already runs it;
 - relevant dependencies;
 - declared or observed environment requirements.
 
-Offer the complete available-task list on request instead of printing every package-level instance.
+Never print every package-level instance by default. If the user requests the complete list, ask for a task-name or config-path filter when useful and present the result in bounded pages.
 
 Present the recommended tasks, exclusions, Turbo upgrade, and files to change. Ask once: “Proceed with these tasks and create the onboarding PR?” Explain that approval covers repository enablement, file changes, push, and pull-request creation. After approval, complete the workflow without asking again.
 
