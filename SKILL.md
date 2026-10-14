@@ -1,50 +1,28 @@
 ---
 name: vercel-ci-setup
-description: Set up Vercel CI for a Vercel project or linked private GitHub repository through the project, repository-settings, task-analysis, task-list, and configuration pull-request APIs. Use when onboarding a project or repository to Vercel CI, selecting recommended Turbo tasks, creating the task-tag pull request, or enabling CI for a repository.
+description: Set up Vercel CI for a Vercel project or linked private GitHub repository. Use when onboarding a repository, selecting recommended Turbo tasks, creating the task-tag pull request, or enabling Vercel CI.
 ---
 
 # Vercel CI Setup
 
-Set up one repository at a time through the authenticated Vercel API. Analysis is read-only, pull-request creation writes to GitHub, and repository enablement changes team settings. Obtain confirmation before writes and enable CI immediately before creating the setup pull request so that pull request can exercise Vercel CI.
-
 ## Preconditions
 
-1. Identify the Vercel team and either a project ID/name or GitHub `owner/repo`. Do not infer the team from a local project link.
-2. Resolve a project to its GitHub link, then confirm the resulting `owner/repo` with the user.
-3. Confirm the repository is private, connected to at least one project owned by that team, and uses Turborepo 2.11.7 or newer.
-4. Use the installed Vercel CLI and its authenticated context. Discover current syntax with `vercel api --help` and routes with `vercel api list`.
-5. Pass the intended team with `--scope <team-slug-or-id>`. Never put a token in a command or output.
+1. Run the skill from a local checkout of the repository being onboarded.
+2. Identify the Vercel team and either a project ID/name or GitHub `owner/repo`. Do not infer the team from a local project link.
+3. Resolve a project to its GitHub link, then confirm the resulting `owner/repo` with the user.
+4. Confirm the repository is private and connected to at least one project owned by that team.
+5. Inspect the local Turborepo dependency. If it is older than 2.11.7, propose an upgrade to at least 2.11.7 and obtain confirmation before updating the package manifest and lockfile. The upgrade must be present on the repository's default branch before task analysis.
+6. Use the installed Vercel CLI and its authenticated context. Pass the intended team with `--scope <team-slug-or-id>` and never put a token in a command or output.
 
-The setup APIs currently analyze GitHub repositories only. Public repositories, unlinked repositories, and repositories linked only to another team are rejected.
+Vercel CI currently onboards private GitHub repositories that are linked to a project on the selected team. Public repositories, unlinked repositories, and repositories linked only to another team are not supported.
 
-## API Operations
-
-Operation IDs are useful when inspecting the API contract:
-
-| Purpose | Operation |
-| --- | --- |
-| Resolve project | `getProject` |
-| Read enablement | `getVercelCiRepositorySettings` |
-| Change enablement | `updateVercelCiRepositorySettings` |
-| Start analysis | `createVercelCiTaskAnalysis` |
-| Read analysis | `getVercelCiTaskAnalysis` |
-| List discovered tasks | `listVercelCiTaskAnalysisTasks` |
-| Create configuration PR | `createVercelCiTaskConfigurationPullRequest` |
-
-Always execute the raw paths below; do not use operation-ID dispatch:
-
-- `GET /v9/projects/{idOrName}`
-- `GET/PATCH /v1/vercel-ci/repository-settings`
-- `POST /v1/vercel-ci/task-analyses`
-- `GET /v1/vercel-ci/task-analyses/{analysisId}`
-- `GET /v1/vercel-ci/task-analyses/{analysisId}/tasks`
-- `POST /v1/vercel-ci/task-analyses/{analysisId}/pull-request`
-
-For raw mutations, place the JSON body in a private temporary file and pass it with `--input`; remove it afterward. URL-encode path and query values.
+The released `vercel ci` namespace inspects and reruns existing CI runs; it does not provide onboarding commands. Use the raw `vercel api "/v1/vercel-ci/..."` commands below, not operation-ID dispatch. For mutations, write JSON to a temporary file, set mode `600`, pass it with `--input`, and remove it afterward. URL-encode path and query values.
 
 ## Workflow
 
 ### 1. Resolve and confirm the repository
+
+The goal is one confirmed private GitHub repository linked to the selected Vercel team.
 
 If the user supplies a project, prefer its immutable project ID over its name and fetch it in the explicit team scope:
 
@@ -62,7 +40,11 @@ Show the project ID/name, team, and inferred GitHub `owner/repo`, then ask the u
 
 If the user supplies `owner/repo` directly, retain it as the candidate and continue to the linked-repository checks. The repository remains the canonical target for every setup endpoint even when setup starts from a project.
 
+Require the local checkout's remote to match the confirmed repository. If Turborepo is older than 2.11.7, obtain confirmation, update the dependency and lockfile with the repository's package manager, and create a dependency-upgrade pull request. Resume onboarding only after the upgrade reaches the default branch.
+
 ### 2. Inspect repository settings
+
+The goal is to record whether Vercel CI was enabled before this workflow so a failed setup can restore the original state.
 
 Read settings with:
 
@@ -75,6 +57,8 @@ vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<ur
 Record `ciEnabled`, `ciEnabledAt`, and the canonical repository identity returned by the API. A disabled result is expected for a repository being onboarded.
 
 ### 3. Start task analysis
+
+The goal is a completed, read-only analysis of the confirmed repository before any onboarding writes.
 
 Starting analysis is asynchronous and does not modify the repository:
 
@@ -90,9 +74,11 @@ vercel api "/v1/vercel-ci/task-analyses" \
 rm -f "$analysis_request"
 ```
 
-Record the returned `analysisId` immediately. Do not start a second analysis if the response outcome is uncertain; report the uncertainty because there is no analysis-list endpoint for recovering an unknown ID.
+Keep the returned `analysisId` for status, task-list, and pull-request requests. If the request outcome is uncertain, do not start another analysis because an unknown ID cannot be recovered.
 
 ### 4. Wait for completion
+
+The goal is a completed analysis from the current default-branch revision.
 
 Poll the same analysis with bounded waits:
 
@@ -109,6 +95,8 @@ vercel api "/v1/vercel-ci/task-analyses/<url-encoded-analysis-id>" \
 Analysis results expire after 24 hours. Never treat an unchanged `pending` state as failure by itself.
 
 ### 5. Collect and review tasks
+
+The goal is an exact user-approved selection of recommended tasks before enabling Vercel CI or creating a pull request.
 
 List tasks with `limit=100`, following every `pagination.nextCursor` until absent:
 
@@ -132,11 +120,15 @@ Ask the user to approve the exact recommended-task selection before creating a p
 
 ### 6. Link variables only when needed
 
+The goal is to identify required credentials without exposing or copying secret values.
+
 Do not copy or expose secret values during setup. If tasks need credentials, offer to link existing Shared Environment Variables to the repository through the Shared Variable repository-link API before enablement. Show variable names and targets only, ask the user to approve each link, and never print values.
 
 Repository task analysis and pull-request creation do not require variable linking. Skipping this step is valid.
 
 ### 7. Enable CI and create the configuration pull request
+
+The goal is an enabled repository and a configuration pull request containing the approved tasks, with no enabled-but-unconfigured repository left behind after a definitive failure.
 
 After task and variable selections are approved, ask for confirmation to enable Vercel CI and create the setup pull request as one workflow. If the repository was disabled, enable it first:
 
