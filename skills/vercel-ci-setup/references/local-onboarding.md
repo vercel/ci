@@ -43,7 +43,7 @@ vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<ur
   --raw
 ```
 
-Record `ciEnabled`, `ciEnabledAt`, and the canonical repository identity. Stop if the repository is public, unlinked, linked only to another team, or does not match the local checkout.
+Record `ciEnabledAt` and the canonical repository identity. Treat `ciEnabled` as the API's derived convenience field: the repository is enabled when `ciEnabledAt` is present. Stop if the repository is public, unlinked, linked only to another team, or does not match the local checkout.
 
 ## Discover runnable tasks
 
@@ -135,7 +135,7 @@ Review the complete diff, commit it using the repository's commit style, and pus
 
 Only after the branch is ready and pushed, enable Vercel CI immediately before pull-request creation. Prefer a dedicated Vercel CLI command when available; otherwise use the repository-settings API route.
 
-Read settings again and require `ciEnabled: true`. If enablement fails or cannot be verified, do not create the pull request.
+Send `ciEnabled: true`; never set `ciEnabledAt` directly because the service manages that timestamp. Read settings again and require `ciEnabledAt` to be present. If enablement fails or cannot be verified, do not create the pull request.
 
 ## Create the pull request
 

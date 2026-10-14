@@ -25,7 +25,7 @@ Read [references/local-onboarding.md](references/local-onboarding.md) before sta
 
 ### 1. Confirm the target
 
-Resolve project input with the released Vercel CLI. Read Vercel CI repository settings and record the original `ciEnabled` state.
+Resolve project input with the released Vercel CLI. Read Vercel CI repository settings and record the original `ciEnabledAt` value; its presence means Vercel CI is enabled.
 
 Show the team, project when supplied, confirmed repository, local checkout, default branch, and current enablement state. Stop on any mismatch.
 
