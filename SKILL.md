@@ -11,7 +11,7 @@ description: Set up Vercel CI for a Vercel project or linked private GitHub repo
 2. Identify the Vercel team and either a project ID/name or GitHub `owner/repo`. Do not infer the team from a local project link.
 3. Resolve a project to its GitHub link, then confirm the resulting `owner/repo` with the user.
 4. Confirm the repository is private and connected to at least one project owned by that team.
-5. Confirm the repository uses Turborepo 2.11.7 or newer. If it does not, stop and report the required minimum version; upgrading Turborepo is outside this workflow.
+5. Confirm the repository uses Turborepo 2.11.7 or newer. If it does not, stop and ask the user to upgrade Turborepo in a separate pull request, merge it into the default branch, and then rerun this skill. Do not create the upgrade pull request automatically.
 6. Use the installed Vercel CLI and its authenticated context. Pass the intended team with `--scope <team-slug-or-id>` and never put a token in a command or output.
 
 Vercel CI currently onboards private GitHub repositories that are linked to a project on the selected team. Public repositories, unlinked repositories, and repositories linked only to another team are not supported.
