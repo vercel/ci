@@ -22,6 +22,7 @@ Read [references/local-onboarding.md](references/local-onboarding.md) before sta
 4. Resolve project input to its linked GitHub repository and ask the user to confirm the inferred `owner/repo`.
 5. Require the local checkout's GitHub remote to match the confirmed repository.
 6. Require a private GitHub repository linked to at least one project on the selected Vercel team.
+7. Require a Turborepo repository with a root `turbo.json` or `turbo.jsonc` and a resolvable `turbo` dependency. Stop if the repository does not use Turborepo.
 
 ## Workflow
 

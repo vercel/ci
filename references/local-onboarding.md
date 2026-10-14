@@ -30,12 +30,13 @@ Record `ciEnabled`, `ciEnabledAt`, and the canonical repository identity. Stop i
 
 Perform this analysis without modifying files:
 
-1. Detect the package manager from the root `package.json` and lockfile.
-2. Read the root `package.json`, workspace definition, root Turbo configuration, package manifests, and package-level Turbo configurations.
-3. Collect each task declared under `tasks` that has a matching non-empty script in the root or at least one applicable workspace package.
-4. Preserve the task's Turbo config path and full task name. A task name alone is not unique across package-level configurations.
-5. Inspect `.github/workflows/**/*.yml` and `.github/workflows/**/*.yaml` for Turbo tasks already exercised in CI.
-6. Use the repository's package manager to run a Turbo dry run for candidates. Do not execute the tasks during discovery.
+1. Require a root `turbo.json` or `turbo.jsonc` and a resolvable `turbo` dependency. Stop and report that this skill supports only Turborepo repositories if either is absent.
+2. Detect the package manager from the root `package.json` and lockfile.
+3. Read the root `package.json`, workspace definition, root Turbo configuration, package manifests, and package-level Turbo configurations.
+4. Collect each task declared under `tasks` that has a matching non-empty script in the root or at least one applicable workspace package.
+5. Preserve the task's Turbo config path and full task name. A task name alone is not unique across package-level configurations.
+6. Inspect `.github/workflows/**/*.yml` and `.github/workflows/**/*.yaml` for Turbo tasks already exercised in CI.
+7. Use the repository's package manager to run a Turbo dry run for candidates. Do not execute the tasks during discovery.
 
 Use task names as initial recommendation signals:
 
