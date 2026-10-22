@@ -1,0 +1,139 @@
+[
+  {
+    "id": "basic-safe-tasks",
+    "description": "A pnpm workspace with three focused local checks and two unsafe tasks.",
+    "files": {
+      "package.json": "{\n  \"name\": \"basic-safe-tasks\",\n  \"private\": true,\n  \"packageManager\": \"pnpm@10.18.0\",\n  \"devDependencies\": {\n    \"turbo\": \"2.11.7\"\n  },\n  \"scripts\": {\n    \"lint\": \"turbo run lint\",\n    \"check-types\": \"turbo run check-types\",\n    \"test:unit\": \"turbo run test:unit\"\n  }\n}\n",
+      "pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+      "pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
+      "turbo.json": "{\n  \"$schema\": \"https://turbo.build/schema.json\",\n  \"tasks\": {\n    \"lint\": {},\n    \"check-types\": {},\n    \"test:unit\": {},\n    \"build\": { \"dependsOn\": [\"^build\"] },\n    \"test:integration\": { \"env\": [\"DATABASE_URL\"] }\n  }\n}\n",
+      "packages/web/package.json": "{\n  \"name\": \"web\",\n  \"private\": true,\n  \"scripts\": {\n    \"lint\": \"eslint .\",\n    \"check-types\": \"tsc --noEmit\",\n    \"test:unit\": \"vitest run\",\n    \"build\": \"next build\",\n    \"test:integration\": \"vitest run integration\"\n  }\n}\n",
+      ".github/workflows/checks.yml": "name: Checks\non: [pull_request]\njobs:\n  checks:\n    runs-on: ubuntu-latest\n    steps:\n      - run: pnpm turbo run lint check-types test:unit\n"
+    },
+    "expected": {
+      "outcome": "ready",
+      "stopReason": null,
+      "packageManager": "pnpm",
+      "turboVersion": "2.11.7",
+      "requiresUpgrade": false,
+      "selections": [
+        ["turbo.json", "check-types"],
+        ["turbo.json", "lint"],
+        ["turbo.json", "test:unit"]
+      ],
+      "forbiddenSelections": [
+        ["turbo.json", "build"],
+        ["turbo.json", "test:integration"]
+      ]
+    }
+  },
+  {
+    "id": "environment-risk",
+    "description": "An npm workspace where tests and deployment tasks require credentials.",
+    "files": {
+      "package.json": "{\n  \"name\": \"environment-risk\",\n  \"private\": true,\n  \"packageManager\": \"npm@11.6.0\",\n  \"workspaces\": [\"apps/*\"],\n  \"devDependencies\": {\n    \"turbo\": \"^2.12.0\"\n  }\n}\n",
+      "package-lock.json": "{\n  \"name\": \"environment-risk\",\n  \"lockfileVersion\": 3,\n  \"packages\": {\n    \"\": {\n      \"devDependencies\": { \"turbo\": \"^2.12.0\" }\n    }\n  }\n}\n",
+      "turbo.json": "{\n  \"tasks\": {\n    \"lint\": {},\n    \"test:unit\": { \"env\": [\"DATABASE_URL\"] },\n    \"deploy\": { \"env\": [\"VERCEL_TOKEN\"] },\n    \"smoke\": { \"dependsOn\": [\"deploy\"] }\n  }\n}\n",
+      "apps/api/package.json": "{\n  \"name\": \"api\",\n  \"private\": true,\n  \"scripts\": {\n    \"lint\": \"eslint .\",\n    \"test:unit\": \"node --test\",\n    \"deploy\": \"vercel deploy --prod\",\n    \"smoke\": \"node smoke.js\"\n  }\n}\n"
+    },
+    "expected": {
+      "outcome": "ready",
+      "stopReason": null,
+      "packageManager": "npm",
+      "turboVersion": "^2.12.0",
+      "requiresUpgrade": false,
+      "selections": [
+        ["turbo.json", "lint"]
+      ],
+      "forbiddenSelections": [
+        ["turbo.json", "deploy"],
+        ["turbo.json", "smoke"],
+        ["turbo.json", "test:unit"]
+      ]
+    }
+  },
+  {
+    "id": "package-configs",
+    "description": "A yarn workspace with duplicate task names in independent package configurations.",
+    "files": {
+      "package.json": "{\n  \"name\": \"package-configs\",\n  \"private\": true,\n  \"packageManager\": \"yarn@4.10.0\",\n  \"workspaces\": [\"apps/*\"],\n  \"devDependencies\": {\n    \"turbo\": \"2.12.1\"\n  }\n}\n",
+      "yarn.lock": "__metadata:\n  version: 8\n",
+      "turbo.json": "{\n  \"tasks\": {}\n}\n",
+      "apps/store/package.json": "{\n  \"name\": \"store\",\n  \"private\": true,\n  \"scripts\": {\n    \"lint\": \"eslint .\",\n    \"check-types\": \"tsc --noEmit\"\n  }\n}\n",
+      "apps/store/turbo.json": "{\n  \"extends\": [\"//\"],\n  \"tasks\": {\n    \"lint\": {},\n    \"check-types\": {}\n  }\n}\n",
+      "apps/admin/package.json": "{\n  \"name\": \"admin\",\n  \"private\": true,\n  \"scripts\": {\n    \"lint\": \"eslint .\"\n  }\n}\n",
+      "apps/admin/turbo.json": "{\n  \"extends\": [\"//\"],\n  \"tasks\": {\n    \"lint\": {}\n  }\n}\n"
+    },
+    "expected": {
+      "outcome": "ready",
+      "stopReason": null,
+      "packageManager": "yarn",
+      "turboVersion": "2.12.1",
+      "requiresUpgrade": false,
+      "selections": [
+        ["apps/admin/turbo.json", "lint"],
+        ["apps/store/turbo.json", "check-types"],
+        ["apps/store/turbo.json", "lint"]
+      ],
+      "forbiddenSelections": []
+    }
+  },
+  {
+    "id": "jsonc-and-old-turbo",
+    "description": "A Bun repository with JSONC comments and a Turborepo version below the bundled minimum.",
+    "files": {
+      "package.json": "{\n  \"name\": \"jsonc-and-old-turbo\",\n  \"private\": true,\n  \"packageManager\": \"bun@1.3.0\",\n  \"devDependencies\": {\n    \"turbo\": \"2.10.4\"\n  },\n  \"scripts\": {\n    \"format:check\": \"prettier --check .\"\n  }\n}\n",
+      "bun.lock": "",
+      "turbo.jsonc": "{\n  // Keep this comment during configuration changes.\n  \"tasks\": {\n    \"format:check\": {}\n  }\n}\n"
+    },
+    "expected": {
+      "outcome": "ready",
+      "stopReason": null,
+      "packageManager": "bun",
+      "turboVersion": "2.10.4",
+      "requiresUpgrade": true,
+      "selections": [
+        ["turbo.jsonc", "format:check"]
+      ],
+      "forbiddenSelections": []
+    }
+  },
+  {
+    "id": "no-safe-tasks",
+    "description": "A pnpm workspace containing only deployment and end-to-end tasks.",
+    "files": {
+      "package.json": "{\n  \"name\": \"no-safe-tasks\",\n  \"private\": true,\n  \"packageManager\": \"pnpm@10.18.0\",\n  \"devDependencies\": {\n    \"turbo\": \"2.12.0\"\n  },\n  \"scripts\": {\n    \"build\": \"turbo run build\",\n    \"test:e2e\": \"turbo run test:e2e\"\n  }\n}\n",
+      "pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
+      "turbo.json": "{\n  \"tasks\": {\n    \"build\": {},\n    \"test:e2e\": { \"env\": [\"PLAYWRIGHT_TOKEN\"] }\n  }\n}\n"
+    },
+    "expected": {
+      "outcome": "stop",
+      "stopReason": "no_safe_tasks",
+      "packageManager": "pnpm",
+      "turboVersion": "2.12.0",
+      "requiresUpgrade": false,
+      "selections": [],
+      "forbiddenSelections": [
+        ["turbo.json", "build"],
+        ["turbo.json", "test:e2e"]
+      ]
+    }
+  },
+  {
+    "id": "not-turborepo",
+    "description": "A repository without a root Turborepo configuration or dependency.",
+    "files": {
+      "package.json": "{\n  \"name\": \"not-turborepo\",\n  \"private\": true,\n  \"packageManager\": \"npm@11.6.0\",\n  \"scripts\": {\n    \"lint\": \"eslint .\"\n  }\n}\n",
+      "package-lock.json": "{\n  \"name\": \"not-turborepo\",\n  \"lockfileVersion\": 3,\n  \"packages\": { \"\": {} }\n}\n"
+    },
+    "expected": {
+      "outcome": "stop",
+      "stopReason": "unsupported_repository",
+      "packageManager": "npm",
+      "turboVersion": null,
+      "requiresUpgrade": null,
+      "selections": [],
+      "forbiddenSelections": []
+    }
+  }
+]
