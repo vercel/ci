@@ -22,15 +22,18 @@ The default matrix uses these model IDs:
 - `claude-sonnet-5-5-high`
 - `gemini-4-argon-medium`
 
-Override models, cases, repetitions, or concurrency:
+Override models, cases, or repetitions:
 
 ```bash
 python3 skills/vercel-ci-setup/evals/run.py \
   --models gpt-5.6-sol-medium,claude-sonnet-5-5-high \
   --cases basic-safe-tasks,environment-risk \
-  --runs 3 \
-  --jobs 2
+  --runs 3
 ```
+
+Runs are intentionally sequential. Some Cursor Agent CLI versions leave a
+temporary worker helper after exiting; the runner cleans up only helpers created
+by its own run before starting the next evaluation.
 
 Validate the fixtures and print the matrix without using model credits:
 

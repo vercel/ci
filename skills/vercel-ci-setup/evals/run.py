@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
-import concurrent.futures
 import datetime
 import json
 import os
 import pathlib
+import signal
 import shutil
 import subprocess
 import tempfile
@@ -72,7 +72,6 @@ def parse_args() -> argparse.Namespace:
         help="Comma-separated case IDs. Runs every case when omitted.",
     )
     parser.add_argument("--runs", type=int, default=1, help="Runs per model and case.")
-    parser.add_argument("--jobs", type=int, default=1, help="Concurrent agent runs.")
     parser.add_argument(
         "--timeout",
         type=int,
@@ -158,6 +157,32 @@ def initialize_workspace(case: dict[str, Any], root: pathlib.Path) -> None:
             capture_output=True,
             text=True,
         )
+
+
+def worker_server_pids() -> set[int]:
+    completed = subprocess.run(
+        ["ps", "-axo", "pid=,command="],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    pids = set()
+    for line in completed.stdout.splitlines():
+        fields = line.strip().split(maxsplit=1)
+        if len(fields) != 2:
+            continue
+        pid, command = fields
+        if "cursor-agent" in command and command.endswith(" worker-server"):
+            pids.add(int(pid))
+    return pids
+
+
+def stop_new_worker_servers(existing_pids: set[int]) -> None:
+    for pid in worker_server_pids().difference(existing_pids):
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
 
 
 def extract_payload(output: str) -> dict[str, Any]:
@@ -253,46 +278,54 @@ def run_one(
         "run": run_number,
     }
     started = time.monotonic()
+    existing_worker_servers = worker_server_pids()
 
-    with tempfile.TemporaryDirectory(prefix=f"vercel-ci-{case['id']}-") as temp:
-        workspace = pathlib.Path(temp)
-        initialize_workspace(case, workspace)
-        command = [
-            "cursor-agent",
-            "--print",
-            "--mode",
-            "plan",
-            "--model",
-            model,
-            "--output-format",
-            "text",
-            "--sandbox",
-            "enabled",
-            "--trust",
-            "--workspace",
-            str(workspace),
-            PROMPT,
-        ]
-        try:
-            completed = subprocess.run(
-                command,
-                cwd=workspace,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                env={**os.environ, "NO_COLOR": "1"},
-            )
-            result["exitCode"] = completed.returncode
-            result["response"] = completed.stdout
-            result["stderr"] = completed.stderr
-            if completed.returncode != 0:
-                result["error"] = f"cursor-agent exited {completed.returncode}"
-            else:
-                payload = extract_payload(completed.stdout)
-                result["payload"] = payload
-                result["grade"] = grade(case, payload)
-        except (subprocess.TimeoutExpired, ValueError, json.JSONDecodeError) as error:
-            result["error"] = str(error)
+    try:
+        with tempfile.TemporaryDirectory(prefix=f"vercel-ci-{case['id']}-") as temp:
+            workspace = pathlib.Path(temp)
+            initialize_workspace(case, workspace)
+            command = [
+                "cursor-agent",
+                "--print",
+                "--mode",
+                "plan",
+                "--model",
+                model,
+                "--output-format",
+                "text",
+                "--sandbox",
+                "enabled",
+                "--trust",
+                "--workspace",
+                str(workspace),
+                PROMPT,
+            ]
+            try:
+                completed = subprocess.run(
+                    command,
+                    cwd=workspace,
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout,
+                    env={**os.environ, "NO_COLOR": "1"},
+                )
+                result["exitCode"] = completed.returncode
+                result["response"] = completed.stdout
+                result["stderr"] = completed.stderr
+                if completed.returncode != 0:
+                    result["error"] = f"cursor-agent exited {completed.returncode}"
+                else:
+                    payload = extract_payload(completed.stdout)
+                    result["payload"] = payload
+                    result["grade"] = grade(case, payload)
+            except (
+                subprocess.TimeoutExpired,
+                ValueError,
+                json.JSONDecodeError,
+            ) as error:
+                result["error"] = str(error)
+    finally:
+        stop_new_worker_servers(existing_worker_servers)
 
     result["durationSeconds"] = round(time.monotonic() - started, 2)
     run_path = output_dir / "runs" / model / case["id"]
@@ -343,8 +376,8 @@ def write_summary(results: list[dict[str, Any]], output_dir: pathlib.Path) -> No
 
 def main() -> int:
     args = parse_args()
-    if args.runs < 1 or args.jobs < 1:
-        raise ValueError("--runs and --jobs must be positive")
+    if args.runs < 1:
+        raise ValueError("--runs must be positive")
 
     selected_ids = set(args.cases.split(",")) if args.cases else None
     cases = load_cases(selected_ids)
@@ -381,30 +414,24 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as executor:
-        futures = [
-            executor.submit(
-                run_one,
-                case,
-                model,
-                run_number,
-                args.timeout,
-                output_dir,
-            )
-            for case, model, run_number in matrix
-        ]
-        for future in concurrent.futures.as_completed(futures):
-            result = future.result()
-            results.append(result)
-            status = (
-                f"{result['grade']['score']:.1f}"
-                if "grade" in result
-                else f"ERROR: {result.get('error', 'unknown')}"
-            )
-            print(
-                f"{result['model']} / {result['case']} / "
-                f"run {result['run']}: {status}"
-            )
+    for case, model, run_number in matrix:
+        result = run_one(
+            case,
+            model,
+            run_number,
+            args.timeout,
+            output_dir,
+        )
+        results.append(result)
+        status = (
+            f"{result['grade']['score']:.1f}"
+            if "grade" in result
+            else f"ERROR: {result.get('error', 'unknown')}"
+        )
+        print(
+            f"{result['model']} / {result['case']} / "
+            f"run {result['run']}: {status}"
+        )
 
     write_summary(results, output_dir)
     return 1 if any("error" in result for result in results) else 0
