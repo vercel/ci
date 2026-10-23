@@ -1,8 +1,22 @@
-# Local Vercel CI Onboarding
+# Vercel CI Onboarding from a Local Checkout
 
 Use this reference while following the goals and workflow in the parent `SKILL.md`.
 
-Read the current [Vercel CI documentation](https://vercel.com/docs/ci) first. Use it as the source of truth for current product requirements, supported task configuration, and CLI behavior. If it is unavailable or does not specify the task opt-in syntax, use the bundled `tags: ["ci"]` fallback below and note that current documentation could not be verified.
+“Local checkout” means the agent reads and changes a checked-out Git repository before pushing a setup branch. It does not mean that documentation must be available locally or that onboarding runs in an offline mode.
+
+## Documentation fallback
+
+Read the current [Vercel CI documentation](https://vercel.com/docs/ci) first. Use it as the source of truth for current product requirements, supported task configuration, and CLI behavior.
+
+If the page cannot be fetched, returns an error, has no usable content, or does not specify the task opt-in syntax:
+
+1. Continue with this bundled reference instead of stopping.
+2. Use `tags: ["ci"]` as the task opt-in fallback.
+3. Require Turborepo 2.11.7 or newer.
+4. Use only released Vercel CLI commands and the raw API routes documented here.
+5. State in the result and pull-request summary that current documentation could not be verified.
+
+Do not use the fallback when successfully fetched documentation explicitly provides different current requirements or syntax.
 
 ## Check CLI capabilities
 
@@ -149,7 +163,17 @@ Review the complete diff and commit it locally using the repository's commit sty
 
 After the local commit is ready, enable Vercel CI before pushing the setup branch. Prefer a dedicated Vercel CLI command when available; otherwise use the repository-settings API route.
 
-Send `ciEnabled: true`; never set `ciEnabledAt` directly because the service manages that timestamp. Read settings again and require `ciEnabledAt` to be present. If enablement fails or cannot be verified, do not create the pull request.
+Send `ciEnabled: true`; never set `ciEnabledAt` directly because the service manages that timestamp:
+
+```bash
+vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<url-encoded-owner>&repository=<url-encoded-repository>" \
+  --scope <team> \
+  --method PATCH \
+  -F ciEnabled=true \
+  --raw
+```
+
+Read settings again with the `GET` command from [Resolve the repository](#resolve-the-repository) and require `ciEnabledAt` to be present. If enablement fails or cannot be verified, do not push the branch or create the pull request.
 
 ## Push the setup branch
 
