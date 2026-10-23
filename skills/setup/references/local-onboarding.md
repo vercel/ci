@@ -76,7 +76,11 @@ When Turborepo is absent, inspect only enough repository metadata to determine w
 
 For an applicable repository, explain that Vercel CI requires Turborepo and offer the separate `vercel/ci@migrate-to-turborepo` skill. Never start migration without the user's explicit confirmation.
 
-The migration skill creates a separate draft pull request. Stop Vercel CI setup after returning that pull request and ask the user to merge it before running `vercel/ci@setup` again. Do not enable Vercel CI or combine an unreviewed repository migration with the onboarding pull request.
+The migration skill creates a separate draft pull request and returns its URL, head branch, base branch, and commit. Continue setup from that exact migration commit on a new child branch. Create the Vercel CI pull request with the migration branch as its base so reviewers see only CI configuration in the child diff.
+
+Do not enable Vercel CI until the child setup commit is ready to push. Never add CI task tags to the migration pull request or push setup changes directly to its branch.
+
+If a stacked pull request cannot be created safely, stop after the migration pull request and ask the user to merge it before running `vercel/ci@setup` again.
 
 If migration is not applicable, stop and report the specific failed applicability condition.
 
@@ -127,9 +131,14 @@ Never print every package-level instance by default.
 
 Proceed with the conservative selections and create the onboarding pull request. Ask only when the repository is ambiguous or no safe selection can be determined.
 
-## Prepare the combined change
+## Prepare the setup change
 
-Require a clean working tree. Fetch the remote default branch and create a new branch from its latest commit. Never discard unrelated local work.
+Require a clean working tree. Fetch the remote default branch.
+
+- Without a migration handoff, create a new branch from the latest default branch.
+- With a migration handoff, verify that the migration pull request is open, its recorded head commit is unchanged, and its base is the repository's default branch. Create a new child branch from that exact head commit.
+
+Never discard unrelated local work or continue from a migration branch that changed after handoff.
 
 Determine the Turborepo version from the repository's dependency declaration and lockfile. If it is older than the minimum in the current Vercel CI documentation:
 
@@ -196,15 +205,23 @@ If the push fails, leave Vercel CI enabled and report the failure so a retry or 
 
 ## Create the pull request
 
-Create one pull request containing both the Turborepo upgrade, when required, and the selected task configuration:
+Create one pull request containing the selected task configuration and any in-place Turborepo version upgrade:
 
 ```bash
 gh pr create \
-  --base <default-branch> \
+  --base <default-branch-or-migration-branch> \
   --head <setup-branch> \
   --title "Set up Vercel CI" \
   --body "<summary of selected tasks, Turborepo upgrade, and validation>"
 ```
+
+For a migration stack:
+
+- use the migration head branch as `--base`;
+- state in the pull-request body that the setup pull request depends on the migration pull request;
+- include the migration pull-request URL and required merge order;
+- before merging the migration pull request, retarget the setup pull request to the default branch and verify the new base;
+- merge the migration pull request, then verify that the setup diff contains only setup changes before deleting the migration branch.
 
 If the command outcome is uncertain, look for an open pull request with the same head branch before retrying.
 
@@ -228,4 +245,4 @@ When an invocation appears, report its status and construct its dashboard URL:
 https://vercel.com/<team-slug>/~/ci/<invocation-id>
 ```
 
-Return the pull-request URL and, once available, the Vercel CI invocation URL. Do not wait indefinitely. If no invocation appears, report that it is still pending and return the exact lookup command with the pull-request URL.
+Return the setup pull-request URL and, once available, the Vercel CI invocation URL. For a stack, also return the migration pull-request URL, migration-first merge order, and the command or action required to retarget the setup pull request before merging migration. Do not wait indefinitely. If no invocation appears, report that it is still pending and return the exact lookup command with the pull-request URL.
