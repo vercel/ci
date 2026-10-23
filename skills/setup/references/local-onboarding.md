@@ -2,7 +2,16 @@
 
 Use this reference while following the goals and workflow in the parent `SKILL.md`.
 
-Read the current [Vercel CI documentation](https://vercel.com/docs/ci) first. Use it as the source of truth for current product requirements, supported task configuration, and CLI behavior. If it is unavailable or does not specify the task opt-in syntax, use the bundled `tags: ["ci"]` fallback below and note that current documentation could not be verified.
+Read the current [Vercel CI documentation](https://vercel.com/docs/ci) first. Use it as the source of truth for current product requirements, supported task configuration, and CLI behavior.
+
+## When Vercel CI documentation is unavailable
+
+Continue with this bundled reference when the documentation cannot be fetched or does not specify the required operation. Note in the result that current documentation could not be verified.
+
+- Require Turborepo 2.11.7 or later.
+- Add the `ci` task tag using the fallback under [Prepare the combined change](#prepare-the-combined-change).
+- Enable Vercel CI using the released CLI or API commands under [Enable Vercel CI](#enable-vercel-ci).
+- Verify task configuration and repository enablement before pushing the setup branch.
 
 ## Check CLI capabilities
 
@@ -147,7 +156,22 @@ Review the complete diff and commit it locally using the repository's commit sty
 
 ## Enable Vercel CI
 
-After the local commit is ready, enable Vercel CI before pushing the setup branch. Prefer a dedicated Vercel CLI command when available; otherwise use the repository-settings API route.
+After the local commit is ready, enable Vercel CI before pushing the setup branch. Prefer the dedicated Vercel CLI command:
+
+```bash
+vercel ci enable --remote <remote> --scope <team>
+```
+
+If `vercel ci enable` is unavailable, use the released repository-settings API:
+
+```bash
+printf '%s\n' '{"ciEnabled":true}' |
+  vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<url-encoded-owner>&repository=<url-encoded-repository>" \
+    --scope <team> \
+    --method PATCH \
+    --input - \
+    --raw
+```
 
 Send `ciEnabled: true`; never set `ciEnabledAt` directly because the service manages that timestamp. Read settings again and require `ciEnabledAt` to be present. If enablement fails or cannot be verified, do not create the pull request.
 
