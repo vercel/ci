@@ -53,7 +53,7 @@ Configure each selected task using the current syntax from the Vercel CI documen
 
 Enable Vercel CI and verify that it is enabled before pushing the setup branch. Push the prepared branch only after enablement so the push can create the initial Vercel CI invocation, then create one GitHub pull request.
 
-If the push or pull-request creation definitively fails and this workflow enabled a previously disabled repository, restore `ciEnabled: false` and verify the rollback. If an outcome is uncertain, check the remote branch or GitHub pull request before retrying or deciding whether to roll back.
+If the push or pull-request creation fails, leave Vercel CI enabled and report the failure so a retry or concurrent setup is not disabled. If an outcome is uncertain, check the remote branch or GitHub pull request before retrying.
 
 Do not merge the pull request unless the user explicitly asks.
 

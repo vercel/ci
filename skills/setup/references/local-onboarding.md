@@ -155,7 +155,7 @@ Send `ciEnabled: true`; never set `ciEnabledAt` directly because the service man
 
 Push the prepared branch only after Vercel CI enablement is verified, then verify that the expected commit exists on the remote branch. This ordering ensures the push can create the initial Vercel CI invocation.
 
-If the push definitively fails and this workflow enabled a previously disabled repository, restore `ciEnabled: false` and verify the rollback. If the push outcome is uncertain, inspect the remote branch before retrying or rolling back.
+If the push fails, leave Vercel CI enabled and report the failure so a retry or concurrent setup is not disabled. If the push outcome is uncertain, inspect the remote branch before retrying.
 
 ## Create the pull request
 
@@ -171,7 +171,7 @@ gh pr create \
 
 If the command outcome is uncertain, look for an open pull request with the same head branch before retrying.
 
-If pull-request creation definitively fails and the repository was disabled before this workflow, restore and verify the previous state. If the outcome is uncertain, check for the pull request before retrying or rolling back. Never disable a repository that was enabled before onboarding.
+If pull-request creation fails, leave Vercel CI enabled and report the failure so setup can be retried safely. If the outcome is uncertain, check for the pull request before retrying.
 
 ## Find the invocation
 
