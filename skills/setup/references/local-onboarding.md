@@ -58,7 +58,7 @@ Record `ciEnabledAt` and the canonical repository identity. Treat `ciEnabled` as
 
 Keep discovery read-only:
 
-1. Require a root `turbo.json` or `turbo.jsonc` and a declared `turbo` dependency. Stop and report that this skill supports only Turborepo repositories if either is absent.
+1. Require a root `turbo.json` or `turbo.jsonc` and a declared `turbo` dependency. If either is absent, follow [Offer a Turborepo migration](#offer-a-turborepo-migration).
 2. Detect the package manager from the root `package.json` and lockfile.
 3. Read the root `package.json`, workspace definition, root Turborepo configuration, package manifests, and package-level Turborepo configurations.
 4. Collect each task declared under `tasks` that has a matching non-empty script in the root or at least one applicable workspace package.
@@ -66,6 +66,19 @@ Keep discovery read-only:
 6. Inspect `.github/workflows/**/*.yml` and `.github/workflows/**/*.yaml` for Turborepo tasks already exercised in CI.
 
 Do not install dependencies or invoke `turbo` during discovery. If dependencies are absent, invoking `turbo` can use a different global version or create repository guidance files, violating read-only analysis. Perform runtime validation after selecting tasks, when the repository's declared version is installed.
+
+## Offer a Turborepo migration
+
+When Turborepo is absent, inspect only enough repository metadata to determine whether migration is applicable:
+
+- Require an existing npm, pnpm, Yarn, or Bun workspace containing at least two packages.
+- Do not propose migration for a single-package repository, a repository without package-manager workspaces, or a migration that would require changing package managers or moving package directories.
+
+For an applicable repository, explain that Vercel CI requires Turborepo and offer the separate `vercel/ci@migrate-to-turborepo` skill. Never start migration without the user's explicit confirmation.
+
+The migration skill creates a separate draft pull request. Stop Vercel CI setup after returning that pull request and ask the user to merge it before running `vercel/ci@setup` again. Do not enable Vercel CI or combine an unreviewed repository migration with the onboarding pull request.
+
+If migration is not applicable, stop and report the specific failed applicability condition.
 
 Use task names as initial recommendation signals:
 

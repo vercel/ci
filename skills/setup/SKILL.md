@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Set up Vercel CI from a local checkout of a linked private GitHub Turborepo. Use when selecting low-dependency Turborepo tasks, upgrading Turborepo when needed, enabling Vercel CI, and creating one onboarding pull request.
+description: Set up Vercel CI from a local checkout of a linked private GitHub repository. Use when selecting low-dependency Turborepo tasks, offering a Turborepo migration when applicable, upgrading Turborepo when needed, enabling Vercel CI, and creating one onboarding pull request.
 ---
 
 # Vercel CI Setup
@@ -19,7 +19,7 @@ Read [references/local-onboarding.md](references/local-onboarding.md) before sta
 4. Resolve project input to its linked GitHub repository and ask the user to confirm the inferred `owner/repo`.
 5. Require the local checkout's GitHub remote to match the confirmed repository.
 6. Require a private GitHub repository linked to at least one project on the selected Vercel team.
-7. Require a root `turbo.json` or `turbo.jsonc` and a declared `turbo` dependency. Stop if the repository does not use Turborepo.
+7. Require a root `turbo.json` or `turbo.jsonc` and a declared `turbo` dependency. If either is absent, follow the migration handoff in the local onboarding reference.
 
 ## Workflow
 
