@@ -7,7 +7,7 @@ description: Migrate an existing JavaScript or TypeScript package-manager worksp
 
 Adopt Turborepo conservatively in an existing workspace, preserving package scripts and current behavior. This skill prepares migration for Vercel CI but does not enable Vercel CI.
 
-Read the current [Turborepo documentation](https://turborepo.com/docs) before changing files. Treat it as the source of truth for current configuration and package-manager commands.
+Read the current [Turborepo documentation](https://turborepo.dev/docs) before changing files. Treat it as the source of truth for current configuration and package-manager commands.
 
 ## Applicability
 
@@ -63,7 +63,7 @@ Do not:
 - enable Vercel CI or add Vercel CI task tags;
 - migrate deployment, end-to-end, integration, or environment-provisioning tasks unless the user explicitly requests them.
 
-Preserve existing root scripts by default. Add a new root Turbo command only when it does not conflict with an existing script. Replace an existing orchestration script only when the Turbo command is demonstrably equivalent.
+Preserve existing root scripts by default. When retaining an existing root orchestrator, name its Turbo alternative `<task>:turbo`. Replace an existing orchestration script only when the Turbo command is demonstrably equivalent.
 
 ### 3. Create the migration
 
@@ -75,11 +75,14 @@ Create a root `turbo.json` or `turbo.jsonc` using the current documented schema.
 
 - encode task dependencies only when repository evidence establishes them;
 - declare generated outputs when they can be identified confidently;
+- include shared root files used by package tasks in task `inputs`;
 - disable caching for side-effecting tasks or tasks whose meaningful outputs cannot be captured safely;
 - declare environment variables according to current Turborepo guidance when repository evidence establishes them;
 - leave uncertain tasks out of the initial migration.
 
-Do not add speculative `dependsOn`, `outputs`, or environment configuration.
+Do not add speculative `dependsOn`, `inputs`, `outputs`, or environment configuration.
+
+Preserve existing ignore rules. Ensure the package manager's dependency directory and Turborepo's local `.turbo` directory are ignored without replacing the repository's `.gitignore`.
 
 ### 4. Validate behavior
 
@@ -90,7 +93,8 @@ First inspect the Turbo dry-run output and confirm:
 - only intended packages and tasks are selected;
 - task dependencies match observed ordering;
 - no package with a matching script is unexpectedly omitted;
-- no package without the script is forced to run it.
+- no package without the script is forced to run it;
+- changing a shared root input invalidates the affected task cache.
 
 Then run the existing command and its Turbo equivalent for each selected low-risk task. Compare package coverage, ordering where material, exit status, and expected outputs. Do not claim equivalence from a successful Turbo command alone.
 
