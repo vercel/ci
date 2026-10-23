@@ -7,7 +7,16 @@ description: Migrate an existing JavaScript or TypeScript package-manager worksp
 
 Adopt Turborepo conservatively in an existing workspace, preserving package scripts and current behavior. This skill prepares migration for Vercel CI but does not enable Vercel CI.
 
-Read the current [Turborepo documentation](https://turborepo.dev/docs) before changing files. Treat it as the source of truth for current configuration and package-manager commands.
+## Required documentation
+
+Read the current official guidance before changing files:
+
+- [Add to an existing repository](https://turborepo.dev/docs/getting-started/add-to-existing-repository)
+- [Configuring tasks](https://turborepo.dev/docs/crafting-your-repository/configuring-tasks)
+- [Configuration reference](https://turborepo.dev/docs/reference/configuration)
+- [Package configurations](https://turborepo.dev/docs/reference/package-configurations) when package-level overrides may be needed
+
+Treat these pages as the source of truth for current configuration and package-manager commands. If required documentation cannot be verified, stop rather than relying on remembered syntax.
 
 ## Applicability
 
