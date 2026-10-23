@@ -149,7 +149,17 @@ Review the complete diff and commit it locally using the repository's commit sty
 
 After the local commit is ready, enable Vercel CI before pushing the setup branch. Prefer a dedicated Vercel CLI command when available; otherwise use the repository-settings API route.
 
-Send `ciEnabled: true`; never set `ciEnabledAt` directly because the service manages that timestamp. Read settings again and require `ciEnabledAt` to be present. If enablement fails or cannot be verified, do not create the pull request.
+Send `ciEnabled: true`; never set `ciEnabledAt` directly because the service manages that timestamp:
+
+```bash
+vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<url-encoded-owner>&repository=<url-encoded-repository>" \
+  --scope <team> \
+  --method PATCH \
+  -F ciEnabled=true \
+  --raw
+```
+
+Read settings again with the `GET` command from [Resolve the repository](#resolve-the-repository) and require `ciEnabledAt` to be present. If enablement fails or cannot be verified, do not push the branch or create the pull request.
 
 ## Push the setup branch
 
