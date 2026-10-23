@@ -126,4 +126,8 @@ Do not include Vercel CI enablement or task tags in this pull request. Do not me
 
 ## Handoff to Vercel CI
 
-Return the draft pull-request URL and tell the user to merge it before running `vercel/ci@setup` again. After merge, the setup skill performs task selection, adds Vercel CI configuration, enables the repository, and creates its separate onboarding pull request.
+Return the draft pull-request URL, head branch, base branch, and exact head commit.
+
+When migration was launched from `vercel/ci@setup` for a supported GitHub repository, hand these values back to setup. Setup creates a child branch from the migration commit and opens a stacked Vercel CI pull request whose base is the migration branch. Do not add CI task tags or enable Vercel CI in the migration pull request.
+
+For standalone migration or when stacking cannot be verified safely, tell the user to merge the migration pull request before running `vercel/ci@setup`. Automated Vercel CI onboarding and stacked pull-request creation do not support non-GitHub remotes.
