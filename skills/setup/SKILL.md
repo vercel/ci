@@ -7,7 +7,7 @@ description: Set up Vercel CI from a local checkout of a linked private GitHub T
 
 Onboard a private GitHub repository to Vercel CI by selecting a small initial set of Turborepo tasks and opening one configuration pull request.
 
-Read the current [Vercel CI documentation](https://vercel.com/docs/ci) before starting. Treat it as the source of truth for current product requirements, supported configuration syntax, and CLI behavior. If it is unavailable, continue with the bundled reference and note that current documentation could not be verified.
+Read the current [Vercel CI documentation](https://vercel.com/docs/ci) before starting. Treat it as the source of truth for current product requirements, supported configuration syntax, and CLI behavior. If it is unavailable or does not specify the task opt-in syntax, use the bundled `tags: ["ci"]` fallback and note that current documentation could not be verified.
 
 Read [references/local-onboarding.md](references/local-onboarding.md) before starting. It contains the task-selection rules, commands, and recovery behavior.
 
@@ -47,13 +47,13 @@ Create a branch from the latest default branch.
 
 If Turborepo is older than the currently documented minimum, update it with the repository's package manager and regenerate the lockfile. Never use a version below 2.11.7 or edit a lockfile manually.
 
-Configure each selected task using the current syntax from the Vercel CI documentation without removing existing configuration or JSONC comments. Validate the edited configuration and confirm every selected task still has a matching package script. Review the complete diff, commit it, and push the branch.
+Configure each selected task using the current syntax from the Vercel CI documentation without removing existing configuration or JSONC comments. If that syntax is unavailable, use the bundled `tags: ["ci"]` fallback. Validate the edited configuration and confirm every selected task still has a matching package script. Review the complete diff and commit it locally, but do not push yet.
 
-### 5. Enable Vercel CI and create the pull request
+### 5. Enable Vercel CI, push, and create the pull request
 
-Immediately before opening the pull request, enable Vercel CI and verify that it is enabled.
+Enable Vercel CI and verify that it is enabled before pushing the setup branch. Push the prepared branch only after enablement so the push can create the initial Vercel CI invocation, then create one GitHub pull request.
 
-Create one GitHub pull request from the prepared branch. If pull-request creation definitively fails and this workflow enabled a previously disabled repository, restore `ciEnabled: false` and verify the rollback. If the outcome is uncertain, check GitHub for the branch's pull request before deciding whether to roll back.
+If the push or pull-request creation definitively fails and this workflow enabled a previously disabled repository, restore `ciEnabled: false` and verify the rollback. If an outcome is uncertain, check the remote branch or GitHub pull request before retrying or deciding whether to roll back.
 
 Do not merge the pull request unless the user explicitly asks.
 

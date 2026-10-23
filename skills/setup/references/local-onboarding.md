@@ -2,7 +2,7 @@
 
 Use this reference while following the goals and workflow in the parent `SKILL.md`.
 
-Read the current [Vercel CI documentation](https://vercel.com/docs/ci) first. Use it as the source of truth for current product requirements, supported task configuration, and CLI behavior. If it is unavailable, continue with this bundled guidance and note that current documentation could not be verified.
+Read the current [Vercel CI documentation](https://vercel.com/docs/ci) first. Use it as the source of truth for current product requirements, supported task configuration, and CLI behavior. If it is unavailable or does not specify the task opt-in syntax, use the bundled `tags: ["ci"]` fallback below and note that current documentation could not be verified.
 
 ## Check CLI capabilities
 
@@ -121,21 +121,41 @@ If dependencies are absent and no upgrade is needed, install the lockfile's exis
 
 Configure each selected task using the current task opt-in syntax from the Vercel CI documentation. Preserve existing task configuration, formatting, and JSONC comments. Do not add a task that is absent from that configuration.
 
+If the documentation is unavailable or does not state the opt-in syntax, add the `ci` tag to each selected task:
+
+```json
+{
+  "tasks": {
+    "check-types": {
+      "tags": ["ci"]
+    }
+  }
+}
+```
+
+Preserve every other task property and existing tag, add `ci` only once, and apply the fallback in the Turborepo configuration where the selected task is defined. Do not use this fallback when the current documentation explicitly specifies different syntax.
+
 Validate that:
 
 - the resolved Turborepo version satisfies the current documented minimum and is at least 2.11.7;
 - each edited Turborepo configuration parses;
 - every selected task still has a matching non-empty package script;
-- every selected task uses the current documented Vercel CI opt-in syntax;
+- every selected task uses the current documented Vercel CI opt-in syntax or, when unavailable, the bundled `ci` tag fallback;
 - no unselected task was changed.
 
-Review the complete diff, commit it using the repository's commit style, and push the branch. Do not open the pull request yet.
+Review the complete diff and commit it locally using the repository's commit style. Do not push or open the pull request yet.
 
 ## Enable Vercel CI
 
-Only after the branch is ready and pushed, enable Vercel CI immediately before pull-request creation. Prefer a dedicated Vercel CLI command when available; otherwise use the repository-settings API route.
+After the local commit is ready, enable Vercel CI before pushing the setup branch. Prefer a dedicated Vercel CLI command when available; otherwise use the repository-settings API route.
 
 Send `ciEnabled: true`; never set `ciEnabledAt` directly because the service manages that timestamp. Read settings again and require `ciEnabledAt` to be present. If enablement fails or cannot be verified, do not create the pull request.
+
+## Push the setup branch
+
+Push the prepared branch only after Vercel CI enablement is verified, then verify that the expected commit exists on the remote branch. This ordering ensures the push can create the initial Vercel CI invocation.
+
+If the push definitively fails and this workflow enabled a previously disabled repository, restore `ciEnabled: false` and verify the rollback. If the push outcome is uncertain, inspect the remote branch before retrying or rolling back.
 
 ## Create the pull request
 
@@ -151,7 +171,7 @@ gh pr create \
 
 If the command outcome is uncertain, look for an open pull request with the same head branch before retrying.
 
-If pull-request creation definitively fails and the repository was disabled before this workflow, restore and verify the previous state. Never disable a repository that was enabled before onboarding.
+If pull-request creation definitively fails and the repository was disabled before this workflow, restore and verify the previous state. If the outcome is uncertain, check for the pull request before retrying or rolling back. Never disable a repository that was enabled before onboarding.
 
 ## Find the invocation
 
