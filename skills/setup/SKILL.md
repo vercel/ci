@@ -1,5 +1,5 @@
 ---
-name: vercel-ci-setup
+name: setup
 description: Set up Vercel CI from a local checkout of a linked private GitHub Turborepo. Use when selecting low-dependency Turborepo tasks, upgrading Turborepo when needed, enabling Vercel CI, and creating one onboarding pull request.
 ---
 
