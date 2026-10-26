@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Set up Vercel CI from a local checkout of a linked private GitHub Turborepo. Use when selecting low-dependency Turborepo tasks, upgrading Turborepo when needed, enabling Vercel CI, and creating one onboarding pull request.
+description: Set up Vercel CI for a linked private GitHub Turborepo, from a local checkout or a hosted agent run started from the Vercel dashboard. Use when selecting low-dependency Turborepo tasks, upgrading Turborepo when needed, enabling Vercel CI, and creating one onboarding pull request.
 ---
 
 # Vercel CI Setup
@@ -10,6 +10,8 @@ Onboard a private GitHub repository to Vercel CI by selecting a small initial se
 Read the current [Vercel CI documentation](https://vercel.com/docs/ci) before starting. Treat it as the source of truth for current product requirements, supported configuration syntax, and CLI behavior. If it is unavailable or does not specify the task opt-in syntax, use the bundled `tags: ["ci"]` fallback and note that current documentation could not be verified.
 
 Read [references/local-onboarding.md](references/local-onboarding.md) before starting. It contains the task-selection rules, commands, and recovery behavior.
+
+When running inside a hosted agent, such as Vercel Agent started from the Vercel dashboard, also read [references/hosted-onboarding.md](references/hosted-onboarding.md). It replaces the local preconditions, confirmation, push, and pull-request steps below; task selection and validation are unchanged.
 
 ## Preconditions
 
