@@ -64,6 +64,7 @@ Keep discovery read-only:
 4. Collect each task declared under `tasks` that has a matching non-empty script in the root or at least one applicable workspace package.
 5. Preserve the task's Turborepo config path and full task name. A task name alone is not unique across package-level configurations.
 6. Inspect `.github/workflows/**/*.yml` and `.github/workflows/**/*.yaml` for Turborepo tasks already exercised in CI.
+7. In those workflows, find root `package.json` scripts that CI runs directly (for example `bun run check` or `npm run lint`) and that no `turbo.json` declares as a task. A lint, formatter-check, or type-check script among them is a candidate root task, written as `//#<script>`.
 
 Do not install dependencies or invoke `turbo` during discovery. If dependencies are absent, invoking `turbo` can use a different global version or create repository guidance files, violating read-only analysis. Perform runtime validation after selecting tasks, when the repository's declared version is installed.
 
@@ -128,7 +129,7 @@ Determine the Turborepo version from the repository's dependency declaration and
 
 If dependencies are absent and no upgrade is needed, install the lockfile's existing dependency versions so validation uses the repository's declared `turbo` version.
 
-Configure each selected task using the current task opt-in syntax from the Vercel CI documentation. Preserve existing task configuration, formatting, and JSONC comments. Do not add a task that is absent from that configuration.
+Configure each selected task using the current task opt-in syntax from the Vercel CI documentation. Preserve existing task configuration, formatting, and JSONC comments. Do not add a task that is absent from that configuration, except a selected root task from discovery step 7: add it to the root `turbo.json` as `"//#<script>"` with only the Vercel CI opt-in, and say in the pull-request summary that the task is new.
 
 If the documentation is unavailable or does not state the opt-in syntax, add the `ci` tag to each selected task:
 
@@ -150,7 +151,8 @@ Validate that:
 - each edited Turborepo configuration parses;
 - every selected task still has a matching non-empty package script;
 - every selected task uses the current documented Vercel CI opt-in syntax or, when unavailable, the bundled `ci` tag fallback;
-- no unselected task was changed.
+- no unselected task was changed;
+- each new root task's hash changes when a file inside a workspace package changes, checked with `turbo run <script> --dry=json` before and after a temporary edit. If it does not, the root task cannot see package files, so drop it from the selection.
 
 Review the complete diff and commit it locally using the repository's commit style. Do not push or open the pull request yet.
 
