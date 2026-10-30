@@ -30,5 +30,6 @@ The [Vercel CI documentation](https://vercel.com/docs/ci) is the source of truth
 
 - Vercel CI must be enabled before the setup branch reaches GitHub, because the first push creates the first run. If you cannot enable it, do not publish.
 - If publishing fails, leave Vercel CI enabled.
+- Never opt in a persistent task, such as a dev server, even when asked. It never exits, so the run never finishes; explain this and suggest a short task that starts it, checks it, and exits.
 - Never hand-edit a lockfile, change GitHub Actions workflows, or merge the pull request.
 - If nobody can answer questions, do not wait for a reply: use these defaults, or stop and explain the blocker.
