@@ -50,4 +50,4 @@ Runs are created asynchronously after the push, so poll briefly:
 vercel ci list --branch <branch> --commit <sha> --scope <team> --json
 ```
 
-A run's dashboard URL is `https://vercel.com/<team-slug>/~/ci/<invocation-id>`.
+A run's dashboard URL is `https://vercel.com/<team-slug>/~/ci/<invocation-id>`. Read a run's logs with `vercel ci logs <invocation-id> --scope <team>`.
