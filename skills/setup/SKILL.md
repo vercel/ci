@@ -7,7 +7,7 @@ description: Set up Vercel CI for a private GitHub Turborepo linked to Vercel an
 
 Open one pull request that gets this repository's checks running on Vercel CI, with Vercel CI enabled before the branch reaches GitHub. Use whatever tools you have.
 
-The [Vercel CI documentation](https://vercel.com/docs/ci) is the source of truth; read it first. [references/vercel-ci.md](references/vercel-ci.md) has the Vercel-specific details to fall back on.
+The [Vercel CI documentation](https://vercel.com/docs/ci) is the source of truth; read it first. Fall back on [references/vercel-ci.md](references/vercel-ci.md) for anything the documentation does not cover or when it is unavailable, including the Turborepo minimum, the opt-in syntax, and enabling Vercel CI.
 
 ## Steps
 

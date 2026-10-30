@@ -40,7 +40,13 @@ vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<ow
 
 The repository is enabled when `ciEnabledAt` is present.
 
-Enable Vercel CI with `vercel ci enable --remote <remote> --scope <team>`. If that command is unavailable, send `{"ciEnabled":true}` as a `PATCH` to the same settings route. Never set `ciEnabledAt` yourself. Read the settings again to confirm.
+Before enabling, check whether the CLI has the dedicated command with `vercel ci enable --help`; a failure here only means the command is missing. If it exists, run `vercel ci enable --remote <remote> --scope <team>`. Otherwise, send `{"ciEnabled":true}` as a `PATCH` to the same settings route:
+
+```bash
+printf '%s\n' '{"ciEnabled":true}' | vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<owner>&repository=<repo>" --scope <team> --method PATCH --input - --raw
+```
+
+Never set `ciEnabledAt` yourself. Read the settings again to confirm.
 
 ## Finding the run
 
