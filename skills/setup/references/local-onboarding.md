@@ -90,6 +90,8 @@ Then decide with one rule: **select a task unless the evidence shows it needs se
 - Select a build task only when GitHub Actions already runs it without secrets. Framework builds often read environment variables that Turborepo never declares.
 - Leave out tasks that deploy or depend on deployment tasks, tasks that need databases, browsers, or other running services, and tasks whose scripts or workflows use secrets or cloud credentials. These become candidates.
 
+Decide per package, not per task name. A shared task often qualifies in some packages and not others, such as a `build` that GitHub Actions runs only for one app. When the Vercel CI documentation supports opting a task in for specific packages, for example in a package-level Turborepo configuration, opt in only the packages that qualify and list the others as candidates. When it does not, leave the task out and explain which packages would qualify.
+
 Record each selected task with its config path and task name, package count, the reason it qualifies, whether GitHub Actions already runs it, and any uncertainty. Record each candidate with the reason it was left out. Never print every package-level instance.
 
 When a user is available, show the selected tasks and the candidates, and let them add or remove tasks before you edit files. When your environment asks you to propose a plan for approval, put both lists in the plan. Otherwise, proceed with the selection. Stop only when the repository is ambiguous or no task qualifies.
