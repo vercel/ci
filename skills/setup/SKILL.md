@@ -1,63 +1,37 @@
 ---
 name: setup
-description: Set up Vercel CI for a private GitHub Turborepo linked to Vercel. Use when enabling Vercel CI, choosing which Turborepo tasks it runs, upgrading Turborepo when needed, and opening the setup pull request.
+description: Set up Vercel CI for a private GitHub Turborepo linked to Vercel and open the pull request that turns it on. Use when asked to set up, onboard, enable, or add Vercel CI for a repository, to choose which Turborepo tasks Vercel CI runs, or to upgrade Turborepo for Vercel CI.
 ---
 
 # Vercel CI Setup
 
-Open one pull request that gets this repository's checks running on Vercel CI: the Turborepo tasks it relies on, configured for Vercel CI, with Turborepo upgraded when needed and Vercel CI enabled before the branch reaches GitHub.
+Open one pull request that gets this repository's checks running on Vercel CI: its Turborepo tasks opted in to Vercel CI, with Turborepo upgraded when needed, and Vercel CI enabled before the branch reaches GitHub.
 
-Read the current [Vercel CI documentation](https://vercel.com/docs/ci) before starting. Treat it as the source of truth for current product requirements, supported configuration syntax, and CLI behavior. If it is unavailable or does not specify the task opt-in syntax, use the bundled `tags: ["ci"]` fallback and note that current documentation could not be verified.
-
-Read [references/local-onboarding.md](references/local-onboarding.md) before starting. It contains the task-selection guidance, example commands, and recovery behavior.
+The [Vercel CI documentation](https://vercel.com/docs/ci) is the source of truth for requirements, configuration syntax, and CLI behavior; read it first. [references/local-onboarding.md](references/local-onboarding.md) has the detailed rules, example commands, and fallbacks for each step below.
 
 ## What you need
 
 Use whatever tools your environment provides. Commands in the reference are examples, not requirements.
 
-- A checkout of the target repository: the current one, or a fresh clone. Never discard unrelated work in an existing checkout.
-- A way to publish a branch and open a pull request, such as `git push` and `gh pr create`, or your environment's pull-request tool.
+- A checkout of the target repository: the current one, or a fresh clone.
+- A way to publish a branch and open a pull request: `git push` and `gh pr create`, or your environment's pull-request tool.
 - Vercel API access for the team, such as the Vercel CLI.
 - The Vercel team, and a project or GitHub `owner/repo`.
 
-The repository must be a private GitHub repository linked to a project on that team, with a root `turbo.json` or `turbo.jsonc` and a declared `turbo` dependency. If it does not use Turborepo, stop and explain that Vercel CI requires Turborepo, linking the [Vercel CI documentation](https://vercel.com/docs/ci).
+## Defaults
 
-When nobody is available to answer questions, such as a run started from the Vercel dashboard, never wait for a reply: make the conservative choice described here, or stop and explain the blocker.
+- **Coverage over caution.** Include a task unless there is concrete evidence that it needs secrets, deployments, or running services. When unsure, include it and say so in the pull request.
+- **Builds only with proof.** Include a build task only when GitHub Actions already runs it without secrets.
+- **Surface existing failures.** Keep a task that already fails on the default branch, and flag it in the pull request.
+- **Never wait for a reply** when nobody can answer, such as a run started from the Vercel dashboard. Use these defaults, or stop and explain the blocker.
 
 ## Workflow
 
-### 1. Confirm the target
+1. **Confirm the target.** Resolve the repository from the project's Git link and read its Vercel CI settings. Use the repository the request names; otherwise confirm it with the user when one is available. Stop if it is public, unlinked, linked only to another team, does not match the checkout, or does not use Turborepo.
+2. **Check for earlier setup.** If an open setup pull request already exists, report it instead of opening another.
+3. **Choose tasks.** Discover runnable tasks without changing files, then choose with the defaults above. Show the selected tasks and the other candidates in your plan, when you make one, and in the pull request, so the user can ask for more. If nothing would change, report that the repository is already set up.
+4. **Prepare the change.** Branch from the latest default branch, upgrade Turborepo when it is below the documented minimum, opt the selected tasks in, validate the configuration, commit, and run the selected tasks.
+5. **Enable Vercel CI, then publish.** Enable and verify Vercel CI before the branch reaches GitHub, so the first push creates the initial run. Then publish the branch and open one pull request titled "Set up Vercel CI".
+6. **Report.** Return the pull-request URL, the selected tasks, the candidates left out and why, any tasks already failing, any Turborepo upgrade, and the Vercel CI run URL once available.
 
-Resolve the project to its linked GitHub repository and read Vercel CI repository settings, recording the original `ciEnabledAt` value; its presence means Vercel CI is enabled. Confirm the repository with the user when one is available; when the request already names it, use it. Stop if the repository is public, unlinked, linked only to another team, or does not match the checkout.
-
-### 2. Find runnable tasks
-
-Inspect root and package-level Turborepo configurations, workspace package scripts, and GitHub Actions workflows without changing files or running `turbo`. Summarize the available tasks by config path and task name, including how many packages each task covers.
-
-### 3. Choose tasks
-
-Recommend the checks the repository relies on, then include more where the evidence supports it. There is no fixed limit.
-
-- Start with lint, type-check, formatter-check, and unit-test tasks that need no secrets, deployments, or external services, across every package that defines them.
-- Add other runnable tasks, such as builds or other tests, when evidence shows they run without secrets or services, for example because GitHub Actions already runs them that way.
-- Leave out tasks that deploy, need secrets or external services, or whose requirements are unclear, and list them in the pull request with the reason so they can be added later.
-
-When a user is available, show the recommended tasks and the other candidates, and let them add more before you edit anything. Otherwise, proceed with the recommended tasks and the well-supported additions. Do not stop because some tasks are uncertain; leave those out and say so.
-
-### 4. Prepare the change
-
-Create a branch from the latest default branch. If Turborepo is older than the currently documented minimum, update it with the repository's package manager and regenerate the lockfile. Never use a version below 2.11.7 or edit a lockfile manually.
-
-Configure each selected task using the current syntax from the Vercel CI documentation without removing existing configuration or JSONC comments. If that syntax is unavailable, use the bundled `tags: ["ci"]` fallback. Validate the edited configuration, confirm every selected task still has a matching package script, review the complete diff, and commit it.
-
-### 5. Enable Vercel CI, then publish
-
-Enable Vercel CI and verify that it is enabled before the setup branch reaches GitHub, so the first push creates the initial Vercel CI invocation. Skip enabling when it is already enabled. Then publish the branch and open one pull request, with whatever tool your environment provides.
-
-If publishing fails, leave Vercel CI enabled and report the failure so a retry or concurrent setup is not disabled. If an outcome is uncertain, check the remote branch or open pull requests before retrying, and never open a second setup pull request.
-
-Do not merge the pull request unless the user explicitly asks.
-
-### 6. Report the result
-
-Return the pull-request URL, the tasks you enabled, the tasks you left out and why, any Turborepo upgrade, and, once available, the Vercel CI invocation URL. Invocation creation is asynchronous, so use a bounded wait; if none appears, say how to look it up later.
+Never merge the pull request unless the user explicitly asks.
