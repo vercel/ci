@@ -16,7 +16,7 @@ The [Vercel CI documentation](https://vercel.com/docs/ci) is the source of truth
 3. Choose tasks, as described below.
 4. Make the change: upgrade Turborepo if it is below the documented minimum, opt the chosen tasks in to Vercel CI, and run them.
 5. Enable Vercel CI, then publish the branch and open one pull request titled "Set up Vercel CI".
-6. Report the pull request, the tasks you enabled, the tasks you left out and why, and the Vercel CI run once it appears.
+6. Report the pull request, the tasks you enabled, the tasks you left out and why, and the Vercel CI run once it appears. If the run fails for a reason you did not already flag, say which tasks failed and offer to investigate.
 
 ## Choosing tasks
 
