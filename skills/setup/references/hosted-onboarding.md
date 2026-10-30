@@ -37,7 +37,7 @@ Follow these local sections unchanged inside the cloned checkout:
 
 Apply these substitutions:
 
-- Stop with `turborepo_missing` when the repository has no root `turbo.json` or `turbo.jsonc` or no declared `turbo` dependency. Do not start a Turborepo migration in a hosted run; recommend running `vercel/ci@migrate-to-turborepo` locally in the result.
+- Stop with `turborepo_missing` when the repository has no root `turbo.json` or `turbo.jsonc` or no declared `turbo` dependency. Do not migrate the repository to Turborepo in a hosted run; explain in the result that Vercel CI requires Turborepo and link to the [Vercel CI documentation](https://vercel.com/docs/ci).
 - Stop with `no_safe_tasks` instead of asking when no conservative selection can be determined.
 - Create the setup branch locally from the cloned default-branch commit. Name it `vercel-ci/setup-<short-sha>` unless the request supplies a branch name.
 - Never change files under `.github/workflows`. Hosted publishing tokens cannot write workflow files.
