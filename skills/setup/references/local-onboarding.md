@@ -1,6 +1,6 @@
-# Local Vercel CI Onboarding
+# Vercel CI Onboarding Reference
 
-Use this reference while following the goals and workflow in the parent `SKILL.md`.
+Use this reference while following the goals and workflow in the parent `SKILL.md`. The commands below assume the Vercel CLI, `git`, and the GitHub CLI; when your environment provides other tools for the same operation, use those instead.
 
 Read the current [Vercel CI documentation](https://vercel.com/docs/ci) first. Use it as the source of truth for current product requirements, supported task configuration, and CLI behavior.
 
@@ -11,18 +11,18 @@ Continue with this bundled reference when the documentation cannot be fetched or
 - Require Turborepo 2.11.7 or later.
 - Add the `ci` task tag using the fallback under [Prepare the combined change](#prepare-the-combined-change).
 - Enable Vercel CI using the released CLI or API commands under [Enable Vercel CI](#enable-vercel-ci).
-- Verify task configuration and repository enablement before pushing the setup branch.
+- Verify task configuration and repository enablement before the setup branch reaches GitHub.
 
 ## Check CLI capabilities
 
-Use dedicated Vercel CLI commands when they support the required operation. Fall back to `vercel api` only for onboarding operations that the installed CLI does not expose.
+When using the Vercel CLI, prefer dedicated commands when they support the required operation. Fall back to `vercel api` only for onboarding operations that the installed CLI does not expose.
 
 ```bash
 vercel api --help
 vercel ci list --help
 ```
 
-If either command is unavailable, stop and ask the user to upgrade Vercel CLI. Do not use operation-ID dispatch or unreleased commands.
+If neither the CLI nor another source of Vercel API access supports an operation you need, stop and explain what is missing, such as an outdated Vercel CLI. Do not use operation-ID dispatch or unreleased commands.
 
 ## Resolve the repository
 
@@ -42,7 +42,7 @@ vercel api "/v9/projects/<url-encoded-project-id-or-name>" \
 
 Require the response `accountId` to match the selected team and `link.type` to equal `github`. Read the repository only from `link.org` and `link.repo`; do not infer it from the project name.
 
-Compare the resulting `owner/repo` with the local checkout's GitHub remote. Ask the user to confirm the repository before continuing. A local `.vercel/project.json` can provide a candidate project ID, but does not establish the team or authorize setup.
+Compare the resulting `owner/repo` with the checkout's GitHub remote. When a user is available, ask them to confirm the repository before continuing; when the request already names the repository, use it. A local `.vercel/project.json` can provide a candidate project ID, but does not establish the team or authorize setup.
 
 Read repository settings:
 
@@ -52,7 +52,7 @@ vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<ur
   --raw
 ```
 
-Record `ciEnabledAt` and the canonical repository identity. Treat `ciEnabled` as the API's derived convenience field: the repository is enabled when `ciEnabledAt` is present. Stop if the repository is public, unlinked, linked only to another team, or does not match the local checkout.
+Record `ciEnabledAt` and the canonical repository identity. Treat `ciEnabled` as the API's derived convenience field: the repository is enabled when `ciEnabledAt` is present. Stop if the repository is public, unlinked, linked only to another team, or does not match the checkout.
 
 ## Discover runnable tasks
 
@@ -77,18 +77,22 @@ Use task names as initial recommendation signals:
 
 Task names are only signals. Confirm scripts, dependencies, and environment requirements before recommending them.
 
-## Prefer low-dependency tasks
+## Choose tasks
 
-Prefer focused lint, type-check, formatter-check, and unit-test tasks that require no secrets, environment variables, deployments, or external services.
+Vercel CI should run the checks the repository relies on. Recommend a core set, add what the evidence supports, and explain what you leave out. There is no fixed number of tasks.
 
-Treat existing GitHub Actions use as positive evidence.
+Recommend these whenever they are runnable and need no secrets, deployments, or external services:
 
-Do not recommend these by default:
+- lint, type-check, formatter-check, and unit-test tasks, across every package that defines them;
+- tasks that GitHub Actions already runs without secrets or service containers.
 
-- builds;
-- end-to-end, integration, smoke, or deployment tasks;
+Also include other runnable tasks, such as builds or other test suites, when the evidence shows they need no secrets or services. Existing GitHub Actions use is the strongest evidence; a task with no declared or observed environment requirements is reasonable evidence.
+
+Leave these out of the initial selection:
+
 - tasks that deploy applications or depend on deployment tasks;
-- tasks requiring databases, browsers, cloud credentials, or external services;
+- end-to-end, integration, or smoke tasks that need running services;
+- tasks requiring databases, browsers, cloud credentials, or other secrets;
 - tasks whose environment requirements cannot be determined.
 
 Inspect applicable Turborepo definitions for:
@@ -101,7 +105,7 @@ Inspect applicable Turborepo definitions for:
 
 Also inspect package scripts and existing workflows for environment setup. Do not claim that a task needs no environment variables merely because Turborepo declares none. Describe the available evidence and call uncertainty out explicitly.
 
-Summarize available tasks by config path and task name, counting the package instances covered by each task. Select at most five conservative tasks. Record each selection with:
+Summarize available tasks by config path and task name, counting the package instances covered by each task. Record each selection with:
 
 - task name and config path;
 - package count;
@@ -110,13 +114,13 @@ Summarize available tasks by config path and task name, counting the package ins
 - relevant dependencies;
 - declared or observed environment requirements.
 
-Never print every package-level instance by default.
+Record each task you leave out with the reason, for the pull-request summary, so the user can add it later. Never print every package-level instance by default.
 
-Proceed with the conservative selections and create the onboarding pull request. Ask only when the repository is ambiguous or no safe selection can be determined.
+When a user is available, present the recommended tasks and the other candidates, and let them add or remove tasks before you edit any files. Otherwise, proceed with the recommended tasks and the well-supported additions. Do not stop because some tasks are uncertain; leave them out and say so. Stop only when the repository is ambiguous or no runnable task qualifies.
 
 ## Prepare the combined change
 
-Require a clean working tree. Fetch the remote default branch and create a new branch from its latest commit. Never discard unrelated local work.
+Work in a clean working tree. Fetch the remote default branch and create a new branch from its latest commit. Never discard unrelated local work; if the existing checkout has unrelated changes, use a separate clone or worktree.
 
 Determine the Turborepo version from the repository's dependency declaration and lockfile. If it is older than the minimum in the current Vercel CI documentation:
 
@@ -156,7 +160,7 @@ Review the complete diff and commit it locally using the repository's commit sty
 
 ## Enable Vercel CI
 
-After the local commit is ready, enable Vercel CI before pushing the setup branch. Prefer the dedicated Vercel CLI command:
+After the local commit is ready, enable Vercel CI before the setup branch reaches GitHub, so the first push creates the initial invocation. Skip this step when `ciEnabledAt` is already present. Prefer the dedicated Vercel CLI command:
 
 ```bash
 vercel ci enable --remote <remote> --scope <team>
@@ -173,11 +177,13 @@ printf '%s\n' '{"ciEnabled":true}' |
     --raw
 ```
 
-Send `ciEnabled: true`; never set `ciEnabledAt` directly because the service manages that timestamp. Read settings again and require `ciEnabledAt` to be present. If enablement fails or cannot be verified, do not create the pull request.
+Send `ciEnabled: true`; never set `ciEnabledAt` directly because the service manages that timestamp. Read settings again and require `ciEnabledAt` to be present. If enablement fails or cannot be verified, do not publish the branch or create the pull request.
 
 ## Push the setup branch
 
 Push the prepared branch only after Vercel CI enablement is verified, then verify that the expected commit exists on the remote branch. This ordering ensures the push can create the initial Vercel CI invocation.
+
+If your environment publishes a branch and opens a pull request in one step, such as a pull-request tool without `git push`, use it after enablement in place of this step and the next one, with the same title, base branch, and summary.
 
 If the push fails, leave Vercel CI enabled and report the failure so a retry or concurrent setup is not disabled. If the push outcome is uncertain, inspect the remote branch before retrying.
 
@@ -190,7 +196,7 @@ gh pr create \
   --base <default-branch> \
   --head <setup-branch> \
   --title "Set up Vercel CI" \
-  --body "<summary of selected tasks, Turborepo upgrade, and validation>"
+  --body "<summary of selected tasks, tasks left out and why, Turborepo upgrade, and validation>"
 ```
 
 If the command outcome is uncertain, look for an open pull request with the same head branch before retrying.
