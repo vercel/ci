@@ -1,8 +1,8 @@
 # Vercel CI Details
 
-Facts the [Vercel CI documentation](https://vercel.com/docs/ci) doesn't cover. The repository must be a private GitHub repository linked to a Vercel project on the team.
+Facts the [Vercel CI documentation](https://vercel.com/docs/ci) doesn't cover.
 
-If the documentation is unavailable, say so in the pull request and use these: Turborepo must be 2.11.7 or later, and tasks opt in with `"tags": ["ci"]` in the root `turbo.json`, or in a package's `turbo.json` (with `"extends": ["//"]`) for that package only. Keep existing task properties, tags, and comments.
+If the documentation is unavailable, say so in the pull request and use these: Turborepo must be 2.11.7 or later, and tasks opt in with `"tags": ["ci"]` in the root `turbo.json`, or in a package's `turbo.json` (with `"extends": ["//"]`) for that package only.
 
 ## Repository settings
 
