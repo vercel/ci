@@ -1,34 +1,8 @@
 # Vercel CI Details
 
-Vercel-specific facts for the setup skill. Prefer the [Vercel CI documentation](https://vercel.com/docs/ci) when it covers the same thing; use these when it is unavailable or silent, and say so in the pull request.
+Facts the [Vercel CI documentation](https://vercel.com/docs/ci) doesn't cover. The repository must be a private GitHub repository linked to a Vercel project on the team.
 
-## Requirements
-
-- Turborepo 2.11.7 or later.
-- A private GitHub repository linked to a Vercel project on the team.
-
-## Opting tasks in
-
-Add the `ci` tag to each selected task in the Turborepo configuration where the task is defined. Keep every other property, existing tag, and JSONC comment.
-
-```json
-{
-  "tasks": {
-    "lint": { "tags": ["ci"] }
-  }
-}
-```
-
-To opt a task in for specific packages only, tag it in those packages' configurations instead of the root, when the documentation supports it:
-
-```json
-{
-  "extends": ["//"],
-  "tasks": {
-    "build": { "tags": ["ci"] }
-  }
-}
-```
+If the documentation is unavailable, say so in the pull request and use these: Turborepo must be 2.11.7 or later, and tasks opt in with `"tags": ["ci"]` in the root `turbo.json`, or in a package's `turbo.json` (with `"extends": ["//"]`) for that package only. Keep existing task properties, tags, and comments.
 
 ## Repository settings
 
