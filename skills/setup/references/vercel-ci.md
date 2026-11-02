@@ -32,21 +32,19 @@ To opt a task in for specific packages only, tag it in those packages' configura
 
 ## Repository settings
 
-Read the settings:
+Read the settings. The repository is enabled when `ciEnabledAt` is present.
 
 ```bash
 vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<owner>&repository=<repo>" --scope <team> --raw
 ```
 
-The repository is enabled when `ciEnabledAt` is present.
-
-Before enabling, check whether the CLI has the dedicated command with `vercel ci enable --help`; a failure here only means the command is missing. If it exists, run `vercel ci enable --remote <remote> --scope <team>`. Otherwise, send `{"ciEnabled":true}` as a `PATCH` to the same settings route:
+To enable it, run `vercel ci enable --remote <remote> --scope <team>`. If `vercel ci enable --help` shows your CLI doesn't have that command, send a `PATCH` instead:
 
 ```bash
 printf '%s\n' '{"ciEnabled":true}' | vercel api "/v1/vercel-ci/repository-settings?provider=github&organizationId=<owner>&repository=<repo>" --scope <team> --method PATCH --input - --raw
 ```
 
-Never set `ciEnabledAt` yourself. Read the settings again to confirm.
+Then read the settings again to confirm.
 
 ## Finding the run
 
