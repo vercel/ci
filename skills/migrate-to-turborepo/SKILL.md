@@ -18,6 +18,8 @@ Read the current official guidance before changing files:
 
 Treat these pages as the source of truth for current configuration and package-manager commands. If required documentation cannot be verified, stop rather than relying on remembered syntax.
 
+`turbo setup` is managed-toolchain/dependency setup for repositories that already have a root `turbo.json` or `turbo.jsonc` and supported toolchain declarations. It is not a replacement for adopting Turborepo. Do not introduce `turbo.lock`, toolchain declarations, or `setup` configuration solely for this migration unless the user explicitly requests managed toolchains.
+
 ## Applicability
 
 Require all of the following:
@@ -95,7 +97,7 @@ Preserve existing ignore rules. Ensure the package manager's dependency director
 
 ### 4. Validate behavior
 
-Install dependencies using the lockfile and repository's normal immutable or frozen mode when available.
+Install dependencies using the lockfile and repository's normal immutable or frozen mode when available. Do not use `turbo setup` for migration validation unless the repository already used managed toolchains before the migration.
 
 First inspect the Turbo dry-run output and confirm:
 
