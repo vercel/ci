@@ -5,7 +5,9 @@ description: Migrate an existing JavaScript or TypeScript package-manager worksp
 
 # Migrate to Turborepo
 
-Adopt Turborepo conservatively in an existing workspace, preserving package scripts and current behavior. This skill prepares migration for Vercel CI but does not enable Vercel CI.
+Adopt Turborepo conservatively in an existing multi-package workspace, preserving package scripts and current behavior. This skill prepares migration for Vercel CI but does not enable Vercel CI.
+
+This skill intentionally excludes single-package repositories even though Turborepo supports them. Use it only when there is a package-manager workspace with at least two packages, because the Vercel CI setup handoff expects workspace task selection.
 
 ## Required documentation
 
@@ -78,15 +80,17 @@ Preserve existing root scripts by default. When retaining an existing root orche
 
 ### 3. Create the migration
 
-Create a branch from the latest remote default branch.
+Create a branch from the latest remote default branch. If there is no remote default branch, stop unless the user explicitly asked for a local-only migration test.
 
 Install `turbo` as a root development dependency with the repository's existing package manager. Preserve its dependency style and regenerate the lockfile through the package manager; never edit the lockfile manually.
+
+Ensure the root `package.json` declares the package manager according to current Turborepo guidance. Preserve an existing valid `packageManager`; otherwise add `devEngines.packageManager` using the detected package manager name and exact version from the lockfile or package-manager command. Do not guess a version.
 
 Create a root `turbo.json` or `turbo.jsonc` using the current documented schema. Configure only the selected tasks:
 
 - encode task dependencies only when repository evidence establishes them;
 - declare generated outputs when they can be identified confidently;
-- include shared root files used by package tasks in task `inputs`;
+- include shared root files used by package tasks in task `inputs`; when adding custom `inputs`, include `"$TURBO_DEFAULT$"` so package source-control inputs and ignore behavior are preserved, and use `"$TURBO_ROOT$/<path>"` for root files outside a package;
 - disable caching for side-effecting tasks or tasks whose meaningful outputs cannot be captured safely;
 - declare environment variables according to current Turborepo guidance when repository evidence establishes them;
 - leave uncertain tasks out of the initial migration.
@@ -105,7 +109,7 @@ First inspect the Turbo dry-run output and confirm:
 - task dependencies match observed ordering;
 - no package with a matching script is unexpectedly omitted;
 - no package without the script is forced to run it;
-- changing a shared root input invalidates the affected task cache.
+- changing a shared root input invalidates the affected task cache. For tasks with shared root inputs, run once to populate cache, run again to confirm a cache hit, change one root input, confirm the affected task misses cache, then revert the change.
 
 Then run the existing command and its Turbo equivalent for each selected low-risk task. Compare package coverage, ordering where material, exit status, and expected outputs. Do not claim equivalence from a successful Turbo command alone.
 
