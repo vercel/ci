@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Set up Vercel CI for a private GitHub Turborepo linked to Vercel and open the pull request that turns it on. Use when asked to set up, onboard, enable, or add Vercel CI for a repository, to choose which Turborepo tasks Vercel CI runs, or to upgrade Turborepo for Vercel CI.
+description: Set up Vercel CI for a private GitHub repository linked to Vercel and open the pull request that turns it on. Use when asked to set up, onboard, enable, or add Vercel CI for a repository, to choose which Turborepo tasks Vercel CI runs, to offer Turborepo migration when needed, or to upgrade Turborepo for Vercel CI.
 ---
 
 # Vercel CI Setup
@@ -11,7 +11,7 @@ The [Vercel CI documentation](https://vercel.com/docs/ci) is the source of truth
 
 ## Steps
 
-1. Find the repository. It must be a private GitHub repository linked to a Vercel project on the team, and it must use Turborepo. If not, stop and explain why.
+1. Find the repository. It must be a private GitHub repository linked to a Vercel project on the team. If it does not use Turborepo but looks like an eligible package-manager workspace, offer the separate `migrate-to-turborepo` skill and stop Vercel CI setup after reporting that migration pull request.
 2. If a setup pull request from an earlier run is still open, report it instead of opening another.
 3. Choose tasks, as described below.
 4. Make the change: upgrade Turborepo if it is below the documented minimum, opt the chosen tasks in to Vercel CI while keeping existing task properties and comments, and run them.
@@ -32,5 +32,5 @@ The [Vercel CI documentation](https://vercel.com/docs/ci) is the source of truth
 - If publishing fails, leave Vercel CI enabled.
 - If the Vercel CI run fails for a reason you did not already flag, read the failed tasks' logs and explain the cause and the fix. Fix it in the pull request only when the setup caused it, such as a missing tag or environment variable declaration; report anything else, such as a bug in the code under test.
 - Never opt in a persistent task, such as a dev server, even when asked. It never exits, so the run never finishes; explain this and suggest a short task that starts it, checks it, and exits.
-- Never hand-edit a lockfile, change GitHub Actions workflows, or merge the pull request.
+- Never hand-edit a lockfile, change GitHub Actions workflows, enable Vercel CI in a migration pull request, or merge any pull request.
 - If nobody can answer questions, do not wait for a reply: use these defaults, or stop and explain the blocker.
