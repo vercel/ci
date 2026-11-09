@@ -1,11 +1,11 @@
 ---
 name: vercel-ci-setup
-description: Set up Vercel CI from a local checkout of a linked private GitHub Turborepo. Use when selecting low-dependency Turborepo tasks, upgrading Turborepo when needed, enabling Vercel CI, and creating one onboarding pull request.
+description: Set up Vercel CI from a local checkout of a linked private GitHub repository. Use when selecting low-dependency tasks, adding Turborepo when it is absent or upgrading it when needed, enabling Vercel CI, and creating one onboarding pull request.
 ---
 
 # Vercel CI Setup
 
-Onboard a private GitHub repository to Vercel CI by selecting a small initial set of Turborepo tasks and opening one configuration pull request.
+Onboard a private GitHub repository to Vercel CI by selecting a small initial set of tasks, adding or upgrading Turborepo as needed, and opening one configuration pull request.
 
 Read the current [Vercel CI documentation](https://vercel.com/docs/ci) before starting. Treat it as the source of truth for current product requirements, supported configuration syntax, and CLI behavior. If it is unavailable, continue with the bundled reference and note that current documentation could not be verified.
 
@@ -19,7 +19,7 @@ Read [references/local-onboarding.md](references/local-onboarding.md) before sta
 4. Resolve project input to its linked GitHub repository and ask the user to confirm the inferred `owner/repo`.
 5. Require the local checkout's GitHub remote to match the confirmed repository.
 6. Require a private GitHub repository linked to at least one project on the selected Vercel team.
-7. Require a root `turbo.json` or `turbo.jsonc` and a declared `turbo` dependency. Stop if the repository does not use Turborepo.
+7. If the repository has no root `turbo.json` or `turbo.jsonc`, or no declared `turbo` dependency, add Turborepo in the onboarding pull request.
 
 ## Workflow
 
@@ -31,9 +31,9 @@ Show the team, project when supplied, confirmed repository, local checkout, defa
 
 ### 2. Analyze tasks locally
 
-Inspect root and package-level Turborepo configurations, workspace package scripts, and GitHub Actions workflows without changing files or running `turbo`.
+Inspect root and package-level Turborepo configurations when present, root and workspace package scripts, and GitHub Actions workflows without changing files or running `turbo`. If the repository has no Turborepo configuration, use package scripts as the task candidates.
 
-Summarize the available tasks by config path and task name, including how many package instances each task covers. Select at most five focused lint, type-check, formatter-check, or unit-test tasks that require no secrets, environment variables, deployments, or external services.
+Summarize the available tasks by config path (or the root `turbo.json` to be created) and task name, including how many package instances each task covers. Select at most five focused lint, type-check, formatter-check, or unit-test tasks that require no secrets, environment variables, deployments, or external services.
 
 Record each selection's config path, task name, package count, concise supporting evidence, dependencies, and environment requirements for the pull-request summary. Never print every package-level instance by default.
 
@@ -44,6 +44,8 @@ Proceed with the conservative selections and create the onboarding pull request 
 ### 4. Prepare one local pull request
 
 Create a branch from the latest default branch.
+
+If Turborepo is absent, add it: install `turbo` as a root dev dependency with the repository's package manager, create a root `turbo.json` that declares only the selected tasks, add `.turbo` to `.gitignore`, and declare the package manager in the root `package.json` if no declaration exists. Do not restructure workspaces or rewrite existing scripts.
 
 If Turborepo is older than the currently documented minimum, update it with the repository's package manager and regenerate the lockfile. Never use a version below 2.11.7 or edit a lockfile manually.
 

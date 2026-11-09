@@ -49,11 +49,11 @@ Record `ciEnabledAt` and the canonical repository identity. Treat `ciEnabled` as
 
 Keep discovery read-only:
 
-1. Require a root `turbo.json` or `turbo.jsonc` and a declared `turbo` dependency. Stop and report that this skill supports only Turborepo repositories if either is absent.
+1. Require a root `package.json`. Record whether the repository has a root `turbo.json` or `turbo.jsonc` and whether it declares a `turbo` dependency. If either is absent, plan to add Turborepo in the onboarding pull request (see [Add Turborepo when absent](#add-turborepo-when-absent)). Do not stop or ask because Turborepo is missing.
 2. Detect the package manager from the root `package.json` and lockfile.
-3. Read the root `package.json`, workspace definition, root Turborepo configuration, package manifests, and package-level Turborepo configurations.
-4. Collect each task declared under `tasks` that has a matching non-empty script in the root or at least one applicable workspace package.
-5. Preserve the task's Turborepo config path and full task name. A task name alone is not unique across package-level configurations.
+3. Read the root `package.json`, workspace definition, root Turborepo configuration when present, package manifests, and package-level Turborepo configurations.
+4. Collect each task declared under `tasks` that has a matching non-empty script in the root or at least one applicable workspace package. If there is no Turborepo configuration, collect script names instead: from workspace packages when the repository declares workspaces, otherwise from the root `package.json` as a single-package workspace. Skip root scripts that only call `turbo` or chain other scripts.
+5. Preserve the task's Turborepo config path and full task name. A task name alone is not unique across package-level configurations. For a repository without Turborepo, use the root `turbo.json` to be created as the config path.
 6. Inspect `.github/workflows/**/*.yml` and `.github/workflows/**/*.yaml` for Turborepo tasks already exercised in CI.
 
 Do not install dependencies or invoke `turbo` during discovery. If dependencies are absent, invoking `turbo` can use a different global version or create repository guidance files, violating read-only analysis. Perform runtime validation after selecting tasks, when the repository's declared version is installed.
@@ -109,6 +109,22 @@ Proceed with the conservative selections and create the onboarding pull request.
 
 Require a clean working tree. Fetch the remote default branch and create a new branch from its latest commit. Never discard unrelated local work.
 
+### Add Turborepo when absent
+
+Follow the Turborepo guide to [add Turborepo to an existing repository](https://turborepo.dev/docs/getting-started/add-to-existing-repository). Add only the missing parts:
+
+1. If no `turbo` dependency is declared, install `turbo` as a root dev dependency with the detected package manager, for example `pnpm add turbo --save-dev --workspace-root`, `yarn add turbo --dev`, `npm install turbo --save-dev`, or `bun add turbo --dev`. Use a release at or above the documented minimum, and never below 2.11.7. Let the install regenerate the lockfile.
+2. If no root `turbo.json` or `turbo.jsonc` exists, create a root `turbo.json` with `"$schema": "https://turborepo.dev/schema.json"` and a `tasks` entry for each selected task only. Do not add `build`, `dev`, or other unselected tasks.
+   - For tasks that read source from workspace dependencies, such as type checks, add `"dependsOn": ["^<task>"]` so dependency changes invalidate the cache.
+   - Declare `outputs` only for files the script writes, such as coverage reports or `.tsbuildinfo` files.
+   - Declare environment variables that the script reads in `env`.
+3. Add `.turbo` to `.gitignore` if it is not already ignored.
+4. If the root `package.json` has neither `devEngines.packageManager` nor `packageManager`, add `devEngines.packageManager` with the name and version of the package manager that generated the lockfile.
+
+Do not create or change workspace definitions, move packages, or rewrite existing scripts to call `turbo`. Record in the pull-request summary that this change adds Turborepo, and list each added file and dependency.
+
+### Upgrade Turborepo when needed
+
 Determine the Turborepo version from the repository's dependency declaration and lockfile. If it is older than the minimum in the current Vercel CI documentation:
 
 1. Record the current and proposed versions in the pull-request summary.
@@ -119,17 +135,20 @@ Determine the Turborepo version from the repository's dependency declaration and
 
 If dependencies are absent and no upgrade is needed, install the lockfile's existing dependency versions so validation uses the repository's declared `turbo` version.
 
-Configure each selected task using the current task opt-in syntax from the Vercel CI documentation. Preserve existing task configuration, formatting, and JSONC comments. Do not add a task that is absent from that configuration.
+### Configure the selected tasks
+
+Configure each selected task using the current task opt-in syntax from the Vercel CI documentation. Preserve existing task configuration, formatting, and JSONC comments. In an existing configuration, do not add a task that is absent from it.
 
 Validate that:
 
 - the resolved Turborepo version satisfies the current documented minimum and is at least 2.11.7;
-- each edited Turborepo configuration parses;
+- each edited or created Turborepo configuration parses;
+- the repository's installed `turbo` resolves every selected task, checked through the package manager with a dry run such as `pnpm exec turbo run <tasks> --dry=json`;
 - every selected task still has a matching non-empty package script;
 - every selected task uses the current documented Vercel CI opt-in syntax;
 - no unselected task was changed.
 
-Review the complete diff, commit it using the repository's commit style, and push the branch. Do not open the pull request yet.
+Review the complete diff and commit only the intended changes, using the repository's commit style. Push the branch. Do not open the pull request yet.
 
 ## Enable Vercel CI
 
@@ -139,14 +158,14 @@ Send `ciEnabled: true`; never set `ciEnabledAt` directly because the service man
 
 ## Create the pull request
 
-Create one pull request containing both the Turborepo upgrade, when required, and the selected task configuration:
+Create one pull request containing the Turborepo addition or upgrade, when required, and the selected task configuration:
 
 ```bash
 gh pr create \
   --base <default-branch> \
   --head <setup-branch> \
   --title "Set up Vercel CI" \
-  --body "<summary of selected tasks, Turborepo upgrade, and validation>"
+  --body "<summary of selected tasks, Turborepo addition or upgrade, and validation>"
 ```
 
 If the command outcome is uncertain, look for an open pull request with the same head branch before retrying.
