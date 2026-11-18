@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Set up Vercel CI for a private GitHub repository linked to Vercel. Use when asked to set up, onboard, enable, or add Vercel CI; choose Vercel CI tasks; add Turborepo through `vercel/turborepo@add` when needed; or upgrade Turborepo for Vercel CI.
+description: Set up Vercel CI for a private GitHub repository. Use when asked to set up, onboard, enable, or add Vercel CI; choose Vercel CI tasks; add Turborepo through `vercel/turborepo@add` when needed; or upgrade Turborepo for Vercel CI.
 ---
 
 # Vercel CI Setup
@@ -11,7 +11,7 @@ The [Vercel CI documentation](https://vercel.com/docs/ci) is the source of truth
 
 ## Steps
 
-1. Find the repository. It must be a private GitHub repository linked to a Vercel project on the team. If not, stop and explain why. Do not stop because the repository does not use Turborepo; add it in step 4 only when the repository is eligible and the Turborepo addition can be validated safely. If safe addition conditions are not met, stop and explain the blocker. If the user asks for separate review, create a Turborepo-only pull request first and tell the user to rerun setup after it merges.
+1. Find the repository. It must be a private GitHub repository. If not, stop and explain why. Do not stop because the repository does not use Turborepo; add it in step 4 only when the repository is eligible and the Turborepo addition can be validated safely. If safe addition conditions are not met, stop and explain the blocker. If the user asks for separate review, create a Turborepo-only pull request first and tell the user to rerun setup after it merges.
 2. If a setup pull request from an earlier run is still open, report it instead of opening another.
 3. Choose tasks, as described below.
 4. Make the change: if the repository does not use Turborepo yet, follow `vercel/turborepo@add` in setup-owned same-PR mode to add the minimal Turborepo configuration. Upgrade Turborepo if it is below the documented minimum, opt the chosen tasks in to Vercel CI while keeping existing task properties and comments, and run them.
