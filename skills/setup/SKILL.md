@@ -24,6 +24,7 @@ The [Vercel CI documentation](https://vercel.com/docs/ci) is the source of truth
 - Without Turborepo, choose from package scripts: workspace packages when the repository declares workspaces, otherwise the root `package.json`.
 - When setup must add Turborepo first through `vercel/turborepo@add`, only select tasks whose existing behavior, dependencies, outputs, and environment requirements can be validated safely. Leave uncertain tasks out and explain why.
 - Select a build only when GitHub Actions already runs it without secrets; builds often read environment variables that Turborepo never declares.
+- Include root scripts that GitHub Actions runs directly, such as `bun run check`, even when no `turbo.json` declares them. Add lint, format-check, and type-check scripts as `//#<script>` root tasks.
 - Decide per package. A shared task can qualify in one package and not in another.
 - Keep a task that already fails on the default branch, and flag it.
 - List the selected tasks and the ones you left out, with reasons, in the pull request, and in your plan if you make one, so the user can ask for more.
